@@ -29,6 +29,17 @@ def main():
 def draw_pixel(x, y, color:tuple[int, int, int]):
     ScreenX = int((WIDTH /2) + x)
     ScreenY = int((HIGHT /2) - y)
-    pygame.gfxdraw.pixel(screen, ScreenX, ScreenY, color)
+    r, g, b = clamp(color[0]), clamp(color[1]), clamp(color[2])
+
+
+    pygame.gfxdraw.pixel(screen, ScreenX, ScreenY, (r, g, b))
+
+def clamp (n):
+    if n < 0:
+        return 0
+    elif n > 255:
+        return 255
+    else:
+        return n
 if __name__ == "__main__":
     main()
