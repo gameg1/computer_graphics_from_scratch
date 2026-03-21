@@ -4,8 +4,8 @@ import math
 
 
 
-WIDTH = 1920
-HEIGHT = 1080
+WIDTH = 600
+HEIGHT = 600
 pygame.init()
 
 class vector3:
@@ -13,7 +13,8 @@ class vector3:
         self.x = x
         self.y = y
         self.z = z
-    
+    def __repr__(self):
+        return f"({self.x}, {self.y}, {self.z})"
     def __add__(self, other):
         if not isinstance(other, vector3):
             return NotImplemented
@@ -65,21 +66,20 @@ def main():
 
     clock = pygame.time.Clock()
     running = True
-
     #
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-
+        
         for canvas_x in range(-(WIDTH // 2), WIDTH // 2):
             for canvas_y in range(-(HEIGHT // 2), HEIGHT // 2):
                 # Determine which square on the grid corresponds to this square on the canvas
 
                 # Converts each pixel on the canvas (canvas_x and canvas_y) to a 3d point on the viewport (viewport_x, viewport_y, viewport_z)
-                distance:vector3 = canvas_to_viewport(canvas_x, canvas_y)
+                direction:vector3 = canvas_to_viewport(canvas_x, canvas_y)
                 # Determine the colo0r seen through that grid square
-                color = trace_ray(Camera_pos, distance, 1, float("inf"))
+                color = trace_ray(Camera_pos, direction, 1, math.inf)
 
                 # Paint the square with that color
                 draw_pixel(canvas_x, canvas_y, color)
@@ -105,14 +105,14 @@ def canvas_to_viewport(x:int, y:int):
     return vector3(x * (viewport_width / WIDTH), y * (viewport_height / HEIGHT), viewport_distance)
 
 def trace_ray(O:vector3, d:vector3, t_min, t_max):
-    closest_t = float("inf")
+    closest_t = math.inf
     closest_sphere = None
     for sphere in scene:
         t1, t2 = intersect_ray_sphere(O, d, sphere)
-        if t1 in [t_min, t_max] and t1 < closest_t:
+        if t1 < closest_t and t_min < t1 and t1 < t_max:
             closest_t = t1
             closest_sphere = sphere
-        if t2 in [t_min, t_max] and t2 < closest_t:
+        if t2 < closest_t and t_min < t2 and t2 < t_max:
             closest_t = t2
             closest_sphere = sphere
         if closest_sphere == None:
@@ -129,25 +129,12 @@ def intersect_ray_sphere(O:vector3, D:vector3, sphere:sphere):
 
     discriminant = b*b - 4*a*c
     if discriminant < 0:
-        return (float("inf"), float("inf"))
+        return (math.inf, math.inf)
     
     t1 = (-b + math.sqrt(discriminant)) / (2 * a)
     t2 = (-b - math.sqrt(discriminant)) / (2 * a)
 
     return t1, t2
-
-
-def ray_equation(camera_pos:vector3, viewport_pos:vector3, amount:int):
-    """Takes the cam position and viewport position and gives
-    a point along its vector by an amount"""
-
-    point = camera_pos + amount(viewport_pos - camera_pos)
-    return point
-
-def sphere_equation(point:tuple,position:tuple, radius:int,):
-    point_x, point_y, point_z = point
-    
-    sphere_x, sphere_y, sphere_z = position
 
 
 def clamp (n:int):
