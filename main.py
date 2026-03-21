@@ -115,9 +115,9 @@ def trace_ray(O:vector3, d:vector3, t_min, t_max):
         if t2 < closest_t and t_min < t2 and t2 < t_max:
             closest_t = t2
             closest_sphere = sphere
-        if closest_sphere == None:
-            return BACKGROUND_COLOR
-        return closest_sphere.color
+    if closest_sphere == None:
+        return BACKGROUND_COLOR
+    return closest_sphere.color
     
 def intersect_ray_sphere(O:vector3, D:vector3, sphere:sphere):
     r = sphere.radius
