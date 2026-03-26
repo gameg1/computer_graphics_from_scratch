@@ -41,9 +41,10 @@ class sphere:
         self.radius = radius
         self.color = color
 
+# Window set up
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 # Camera Info
-Camera_pos:vector3 = vector3(0, 0, 0) # X, Y, Z
+Camera_pos:vector3 = vector3(0, 0, 0) # X, Y, Z - At origin point
 Camera_vector:vector3 = vector3(0, 0, 1) # Unit vector pointing towards Z+
 
 # Viewport Info
@@ -55,9 +56,9 @@ viewport_distance = 1
 # Set up the envioment
 BACKGROUND_COLOR = (255, 255, 255)
 scene = [
-        sphere(vector3(0, -1, 3), 1, (255, 0 , 0)),
-        sphere(vector3(2, 0, 4), 1, (0, 0, 255)),
-        sphere(vector3(-2, 0, 4), 1, (0, 255, 0)),
+        sphere(vector3(0, -1, 3), 1, (255, 0 , 0)), # Sphere 1
+        sphere(vector3(2, 0, 4), 1, (0, 0, 255)),   # Sphere 2
+        sphere(vector3(-2, 0, 4), 1, (0, 255, 0)),  # Sphere 3
         ]
 
 
@@ -66,15 +67,15 @@ def main():
 
     clock = pygame.time.Clock()
     running = True
-    #
+    # Runs per frame
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
         
+        # Determine which square on the grid corresponds to this square on the canvas
         for canvas_x in range(-(WIDTH // 2), WIDTH // 2):
             for canvas_y in range(-(HEIGHT // 2), HEIGHT // 2):
-                # Determine which square on the grid corresponds to this square on the canvas
 
                 # Converts each pixel on the canvas (canvas_x and canvas_y) to a 3d point on the viewport (viewport_x, viewport_y, viewport_z)
                 direction:vector3 = canvas_to_viewport(canvas_x, canvas_y)
@@ -102,6 +103,7 @@ def draw_pixel(x, y, color:tuple[int, int, int]):
     pygame.gfxdraw.pixel(screen, Screen_X, Screen_Y, (r, g, b))
 
 def canvas_to_viewport(x:int, y:int):
+    """Returns a vector3 from a canvas x, y co-ordernents to viewport x, y, x"""
     return vector3(x * (viewport_width / WIDTH), y * (viewport_height / HEIGHT), viewport_distance)
 
 def trace_ray(O:vector3, d:vector3, t_min, t_max):
@@ -109,10 +111,10 @@ def trace_ray(O:vector3, d:vector3, t_min, t_max):
     closest_sphere = None
     for sphere in scene:
         t1, t2 = intersect_ray_sphere(O, d, sphere)
-        if t1 < closest_t and t_min < t1 and t1 < t_max:
+        if t1 < closest_t and t_min < t1 < t_max:
             closest_t = t1
             closest_sphere = sphere
-        if t2 < closest_t and t_min < t2 and t2 < t_max:
+        if t2 < closest_t and t_min < t2 < t_max:
             closest_t = t2
             closest_sphere = sphere
     if closest_sphere == None:
