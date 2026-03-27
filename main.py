@@ -18,7 +18,7 @@ class vector3:
     def __add__(self, other):
         if not isinstance(other, vector3):
             return NotImplemented
-        return vector3(self.x + other.x, self.y + other.y, self.x + other.x)
+        return vector3(self.x + other.x, self.y + other.y, self.z + other.z)
     
     def __sub__(self, other):
         if not isinstance(other, vector3):
@@ -51,23 +51,24 @@ class vector3:
         return self / self.magnitude()
 
 class sphere:
-    def __init__(self, pos:vector3, radius:float, color:tuple[int, int, int]):
+    def __init__(self, pos:vector3, radius:float, color:pygame.Color):
         self.pos = pos
         self.radius = radius
-        self.color = color
+        self.color:pygame.Color = color
 
     def normal(self, position:vector3):
         return (position - self.pos)/vector3.magnitude(position - self.pos)
 
 class light:
-    def __init__(self, type:str, intensity:float, vec3:vector3 = vector3(0,0,0)):
-        if type not in ["ambient", "point", "directional"]:
-            return NotImplemented
-        self.type:str = type
+    AMBIENT = 0
+    POINT = 1
+    DIRECTIONAL = 2
+    def __init__(self, type:int, intensity:float, vec3:vector3 = vector3(0,0,0)):
+        self.type:int = type
         self.intensity:float = intensity
-        if type == "point":
+        if type == 1:
             self.position:vector3 = vec3
-        elif type == "directional":
+        elif type == 2:
             self.direction:vector3 = vec3
 # Window set up
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -82,17 +83,17 @@ viewport_distance = 1
 
         
 # Set up the envioment
-BACKGROUND_COLOR = (255, 255, 255)
+BACKGROUND_COLOR = pygame.Color(255, 255, 255)
 scene_objects = [
         sphere(vector3(0, -1, 3), 1, (255, 0 , 0)), # Sphere 1
         sphere(vector3(2, 0, 4), 1, (0, 0, 255)),   # Sphere 2
         sphere(vector3(-2, 0, 4), 1, (0, 255, 0)),  # Sphere 3
-        sphere(vector3(0, -5001, 0), 5000, (255, 255, 0))
+        sphere(vector3(0, -5001, 0), 5000, (255, 255, 0)) # Sphere 4 - The floor
         ]
 scene_lights = [
-        light("ambient", 0.2),                      # Ambient light
-        light("point", 0.6, vector3(2, 1, 0)),      # Point light
-        light("directional", 0.2, vector3(1, 4, 4)) # Directional light
+        light(light.AMBIENT, 0.2),                       # Ambient light
+        light(light.POINT, 0.6, vector3(2, 1, 0)),       # Point light
+        light(light.DIRECTIONAL, 0.2, vector3(1, 4, 4)), # Directional light
         ]
 
 
@@ -127,7 +128,7 @@ def main():
 
     pygame.quit()
 
-def draw_pixel(x, y, color:tuple[int, int, int]):
+def draw_pixel(x, y, color:pygame.Color):
     """Draws a pixel to the screen with 0,0 being the center of the screen"""
     Screen_X = int((WIDTH /2) + x)
     Screen_Y = int((HEIGHT /2) - y)
@@ -142,29 +143,24 @@ def canvas_to_viewport(x:int, y:int):
 
 def trace_ray(O:vector3, d:vector3, t_min, t_max):
     closest_t = math.inf
-    closest_sphere = None
-    for sphere in scene_objects:
-        t1, t2 = intersect_ray_sphere(O, d, sphere)
+    closest_sphere:sphere = None
+    for object in scene_objects:
+        t1, t2 = intersect_ray_sphere(O, d, object)
         if t1 < closest_t and t_min < t1 < t_max:
             closest_t = t1
-            closest_sphere = sphere
+            closest_sphere = object
         if t2 < closest_t and t_min < t2 < t_max:
             closest_t = t2
-            closest_sphere = sphere
+            closest_sphere = object
     if closest_sphere == None:
         return BACKGROUND_COLOR
     
     point = O + d * closest_t  # Compute intersection
     normal = closest_sphere.normal(point)
     normal = normal.normalized()
-    #print(closest_sphere.color)
-    #print(compute_lighting(point, normal))
+    intensity = compute_lighting(point, normal)
     r, g, b = closest_sphere.color
-    c_light = compute_lighting(point, normal)
-    r = int(r * c_light)
-    g = int(g * c_light)
-    b = int(b * c_light)
-    return (r, g, b)
+    return pygame.Color(clamp(int(r * intensity)), clamp(int(g * intensity)), clamp(int(b * intensity)))
     
 def intersect_ray_sphere(O:vector3, D:vector3, sphere:sphere):
     r = sphere.radius
@@ -186,12 +182,12 @@ def intersect_ray_sphere(O:vector3, D:vector3, sphere:sphere):
 def compute_lighting(point:vector3, normal:vector3):
     i:float = 0.0
     for light in scene_lights:
-        if light.type == "ambient":
+        if light.type == light.AMBIENT:
             i += light.intensity
         else:
-            if light.type == "point":
+            if light.type == light.POINT:
                 L = light.position - point
-            else:
+            elif light.type == light.DIRECTIONAL:
                 L = light.direction
             # Check here if something goes wrong - indentation
             n_dot_l = vector3.dot_product(normal, L)
