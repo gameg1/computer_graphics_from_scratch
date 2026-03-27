@@ -38,23 +38,27 @@ class vector3:
         elif isinstance(other, float):
             return vector3(self.x / other, self.y / other, self.z / other)
         return NotImplemented
+    
+    def __neg__(self):
+        return vector3(-self.x, -self.y, -self.z)
 
     def dot_product(self, other):
         if not isinstance(other, vector3):
             return NotImplemented
         return self.x * other.x + self.y * other.y + self.z * other.z
     
-    def magnitude(self):
+    def magnitude(self) -> float:
         return math.sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
     
     def normalized(self):
         return self / self.magnitude()
 
 class sphere:
-    def __init__(self, pos:vector3, radius:float, color:pygame.Color):
+    def __init__(self, pos:vector3, radius:float, color:pygame.Color, specular:int = -1):
         self.pos = pos
         self.radius = radius
         self.color:pygame.Color = color
+        self.specular = specular
 
     def normal(self, position:vector3):
         return (position - self.pos)/vector3.magnitude(position - self.pos)
@@ -85,10 +89,10 @@ viewport_distance = 1
 # Set up the envioment
 BACKGROUND_COLOR = pygame.Color(255, 255, 255)
 scene_objects = [
-        sphere(vector3(0, -1, 3), 1, (255, 0 , 0)), # Sphere 1
-        sphere(vector3(2, 0, 4), 1, (0, 0, 255)),   # Sphere 2
-        sphere(vector3(-2, 0, 4), 1, (0, 255, 0)),  # Sphere 3
-        sphere(vector3(0, -5001, 0), 5000, (255, 255, 0)) # Sphere 4 - The floor
+        sphere(vector3(0, -1, 3), 1, (255, 0 , 0), 500),            # Sphere 1
+        sphere(vector3(2, 0, 4), 1, (0, 0, 255), 500),              # Sphere 2
+        sphere(vector3(-2, 0, 4), 1, (0, 255, 0), 10),              # Sphere 3
+        sphere(vector3(0, -5001, 0), 5000, (255, 255, 0), 1000)     # Sphere 4 - The floor
         ]
 scene_lights = [
         light(light.AMBIENT, 0.2),                       # Ambient light
@@ -158,7 +162,7 @@ def trace_ray(O:vector3, d:vector3, t_min, t_max):
     point = O + d * closest_t  # Compute intersection
     normal = closest_sphere.normal(point)
     normal = normal.normalized()
-    intensity = compute_lighting(point, normal)
+    intensity = compute_lighting(point, normal, -d, closest_sphere.specular)
     r, g, b = closest_sphere.color
     return pygame.Color(clamp(int(r * intensity)), clamp(int(g * intensity)), clamp(int(b * intensity)))
     
@@ -179,7 +183,7 @@ def intersect_ray_sphere(O:vector3, D:vector3, sphere:sphere):
 
     return t1, t2
 
-def compute_lighting(point:vector3, normal:vector3):
+def compute_lighting(point:vector3, normal:vector3, V:vector3, specular:int):
     i:float = 0.0
     for light in scene_lights:
         if light.type == light.AMBIENT:
@@ -189,10 +193,18 @@ def compute_lighting(point:vector3, normal:vector3):
                 L = light.position - point
             elif light.type == light.DIRECTIONAL:
                 L = light.direction
-            # Check here if something goes wrong - indentation
+            # Diffuse
             n_dot_l = vector3.dot_product(normal, L)
             if n_dot_l > 0:
                 i += light.intensity * n_dot_l / (normal.magnitude() * L.magnitude())
+            
+            # Specular
+            if specular != -1:
+                reflection:vector3 = (normal * 2) * vector3.dot_product(normal, L) - L
+                r_dot_v = vector3.dot_product(reflection, V)
+                if r_dot_v > 0:
+                    i += light.intensity * math.pow(r_dot_v / ((reflection.magnitude()) * (V.magnitude())), specular)
+
     return i
 
 
