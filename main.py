@@ -2,7 +2,7 @@ import pygame
 import pygame.gfxdraw
 import math
 
-
+# TODO: Seperate the raytracer software and the objects with the scene.
 
 WIDTH = 600
 HEIGHT = 600
@@ -54,11 +54,12 @@ class vector3:
         return self / self.magnitude()
 
 class sphere:
-    def __init__(self, pos:vector3, radius:float, color:pygame.Color, specular:int = -1):
+    def __init__(self, pos:vector3, radius:float, color:pygame.Color, specular:int = -1, reflective:float = 0.0):
         self.pos = pos
         self.radius = radius
         self.color:pygame.Color = color
         self.specular = specular
+        self.reflective = reflective
 
     def normal(self, position:vector3):
         return (position - self.pos)/vector3.magnitude(position - self.pos)
@@ -87,12 +88,12 @@ viewport_distance = 1
 
         
 # Set up the envioment
-BACKGROUND_COLOR = pygame.Color(255, 255, 255)
+BACKGROUND_COLOR = pygame.Color(0, 0, 0)
 scene_objects = [
-        sphere(vector3(0, -1, 3), 1, (255, 0 , 0), 500),            # Sphere 1
-        sphere(vector3(2, 0, 4), 1, (0, 0, 255), 500),              # Sphere 2
-        sphere(vector3(-2, 0, 4), 1, (0, 255, 0), 10),              # Sphere 3
-        sphere(vector3(0, -5001, 0), 5000, (255, 255, 0), 1000)     # Sphere 4 - The floor
+        sphere(vector3(0, -1, 3), 1, (255, 0 , 0), 500, 0.2),            # Sphere 1
+        sphere(vector3(2, 0, 4), 1, (0, 0, 255), 500, 0.3),              # Sphere 2
+        sphere(vector3(-2, 0, 4), 1, (0, 255, 0), 10, 0.4),              # Sphere 3
+        sphere(vector3(0, -5001, 0), 5000, (255, 255, 0), 1000, 0.5)     # Sphere 4 - The floor
         ]
 scene_lights = [
         light(light.AMBIENT, 0.2),                       # Ambient light
@@ -119,7 +120,7 @@ def main():
                 # Converts each pixel on the canvas (canvas_x and canvas_y) to a 3d point on the viewport (viewport_x, viewport_y, viewport_z)
                 direction:vector3 = canvas_to_viewport(canvas_x, canvas_y)
                 # Determine the colo0r seen through that grid square
-                color = trace_ray(Camera_pos, direction, 1, math.inf)
+                color = trace_ray(Camera_pos, direction, 1, math.inf, 3)
 
                 # Paint the square with that color
                 draw_pixel(canvas_x, canvas_y, color)
@@ -145,27 +146,46 @@ def canvas_to_viewport(x:int, y:int):
     """Returns a vector3 from a canvas x, y co-ordernents to viewport x, y, x"""
     return vector3(x * (viewport_width / WIDTH), y * (viewport_height / HEIGHT), viewport_distance)
 
-def trace_ray(O:vector3, d:vector3, t_min, t_max):
+def trace_ray(O:vector3, d:vector3, t_min, t_max, recursion_depth = 0):
+    closest_sphere, closest_t = closest_intersection(O, d, t_min = t_min, t_max = t_max)
+    if closest_sphere == None:
+        return BACKGROUND_COLOR
+    
+
+    point = O + d * closest_t  # Compute intersection
+    normal = closest_sphere.normal(point)
+    normal = normal.normalized()
+    intensity = compute_lighting(point, normal, -d, closest_sphere.specular)
+    r, g, b = closest_sphere.color
+    local_color = pygame.Color(clamp(int(r * intensity)), clamp(int(g * intensity)), clamp(int(b * intensity)))
+
+    # If we hit hte recusion limit or the object is not reglective, we're done
+    r = closest_sphere.reflective
+    if recursion_depth <= 0 or r <=0:
+        return local_color
+    
+    # Compute hte reflected color
+    R = reflect_ray(-d, normal = normal)
+    reflected_color = trace_ray(point, R, 0.001, math.inf, recursion_depth - 1)
+
+    
+    return pygame.Color(int(local_color.r * (1 - r) + reflected_color.r * r), int(local_color.g * (1 - r) + reflected_color.g * r), int(local_color.b * (1 - r) + reflected_color.b * r))
+
+
+def closest_intersection(O, direction, t_min, t_max)-> tuple[sphere, float]:
     closest_t = math.inf
     closest_sphere:sphere = None
     for object in scene_objects:
-        t1, t2 = intersect_ray_sphere(O, d, object)
+        t1, t2 = intersect_ray_sphere(O, direction, object)
         if t1 < closest_t and t_min < t1 < t_max:
             closest_t = t1
             closest_sphere = object
         if t2 < closest_t and t_min < t2 < t_max:
             closest_t = t2
             closest_sphere = object
-    if closest_sphere == None:
-        return BACKGROUND_COLOR
     
-    point = O + d * closest_t  # Compute intersection
-    normal = closest_sphere.normal(point)
-    normal = normal.normalized()
-    intensity = compute_lighting(point, normal, -d, closest_sphere.specular)
-    r, g, b = closest_sphere.color
-    return pygame.Color(clamp(int(r * intensity)), clamp(int(g * intensity)), clamp(int(b * intensity)))
-    
+    return closest_sphere, closest_t
+
 def intersect_ray_sphere(O:vector3, D:vector3, sphere:sphere):
     r = sphere.radius
     CO = O - sphere.pos
@@ -191,8 +211,15 @@ def compute_lighting(point:vector3, normal:vector3, V:vector3, specular:int):
         else:
             if light.type == light.POINT:
                 L = light.position - point
+                t_max = 1
             elif light.type == light.DIRECTIONAL:
                 L = light.direction
+                t_max = math.inf
+            
+            # Shadow check
+            shadow_sphere, shadow_t = closest_intersection(point, L, 0.001, t_max)
+            if shadow_sphere != None: continue
+            
             # Diffuse
             n_dot_l = vector3.dot_product(normal, L)
             if n_dot_l > 0:
@@ -207,6 +234,8 @@ def compute_lighting(point:vector3, normal:vector3, V:vector3, specular:int):
 
     return i
 
+def reflect_ray(ray:vector3, normal:vector3):
+    return (normal * 2) * normal.dot_product(ray) - ray
 
 def clamp (n:int):
     if n < 0:
