@@ -44,3 +44,14 @@ class vector3:
     
     def normalized(self):
         return self / self.magnitude()
+    
+
+def multiplyMV(mat, vec):
+    result = [0, 0, 0]
+    vec = [vec.x, vec.y, vec.z]
+
+    for i in range(3):
+        for j in range(3):
+            result[i] += vec[j] * mat[i][j]
+
+    return vector3(result[0], result[1], result[2])
