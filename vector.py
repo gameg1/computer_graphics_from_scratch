@@ -46,6 +46,36 @@ class vector3:
         return self / self.magnitude()
     
 
+class vector2:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+    def __repr__(self):
+        return f"Vec2({self.x}, {self.y})"
+    def __add__(self, other):
+        if isinstance(other, vector2):
+            return vector2(self.x + other.x, self.y + other.y)
+        if isinstance(other, int) or isinstance(other, float):
+            return vector2(self.x + other, self.y + other)
+        return NotImplemented
+    def __sub__(self, other):
+        if isinstance(other, vector2):
+            return vector2(self.x - other.x, self.y - other.y)
+        if isinstance(other, int) or isinstance(other, float):
+            return vector2(self.x - other, self.y - other)
+        return NotImplemented
+    def __truediv__(self, other):
+        if isinstance(other, vector2):
+            return vector2(self.x / other.x, self.y / other.y)
+        if isinstance(other, int) or isinstance(other, float):
+            return vector2(self.x / other, self.y / other)
+        return NotImplemented
+    def __mul__(self, other):
+        if isinstance(other, vector2):
+            return vector2(self.x * other.x, self.y * other.y)
+        if isinstance(other, int) or isinstance(other, float):
+            return vector2(self.x * other, self.y * other)
+
 def multiplyMV(mat, vec):
     result = [0, 0, 0]
     vec = [vec.x, vec.y, vec.z]
