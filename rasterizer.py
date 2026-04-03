@@ -81,10 +81,11 @@ def draw_line(P0,P1, color:pygame.Color = (255, 255, 255)): # Default - White
         # Make sure y0 < y1:
         if P0.y > P1.y:
             P0, P1 = P1, P0
-        a = dy / dx
+        a = dx / dy
         x = P0.x
         for y in range(P0.y, P1.y):
             draw_pixel(x, y, color, screen)
+            x = x + a
 
 
 if __name__ == "__main__":
