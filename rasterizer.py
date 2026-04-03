@@ -63,7 +63,7 @@ def main():
 
     pygame.quit()
 
-def draw_line(P0,P1, color:pygame.Color = (255, 255, 255)): # Default - White
+def draw_line(P0:vector2, P1:vector2, color:pygame.Color = (255, 255, 255)): # Default - White
     dx = P1.x - P0.x
     dy = P1.y - P0.y
     if abs(dx) > abs(dy):
