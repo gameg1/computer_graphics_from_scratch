@@ -14,6 +14,7 @@ pygame.init()
 
 # Window set up
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
+
 # Camera Info
 Camera_pos:vector3 = vector3(0, 0, 1) # X, Y, Z - At origin point
 Camera_rotation = [
@@ -25,7 +26,7 @@ Camera_vector:vector3 = vector3(0, 0, 1) # Unit vector pointing towards Z+
 
         
 # Set up the envioment
-BACKGROUND_COLOR = pygame.Color(0, 0, 0)
+BACKGROUND_COLOR = pygame.Color(255, 255, 255)
 scene = {
         "objects":[
         ],
@@ -52,8 +53,8 @@ def main():
         #     for canvas_y in range(-(HEIGHT // 2), HEIGHT // 2, 2):
         #         pass
 
-        draw_line(vector2(-200, -100), vector2(240,120))
-        draw_line(vector2(-50, -200), vector2(60, 240), (255, 0, 0))
+        draw_filled_triangle(vector2(-200, -250), vector2(200, 50), vector2(20, 250),color=(0, 255, 0))
+        draw_wireframe_triange(vector2(-200, -250), vector2(200, 50), vector2(20, 250),color=(255, 255, 255))
 
 
 
@@ -63,7 +64,7 @@ def main():
 
     pygame.quit()
 
-def draw_line(P0:vector2, P1:vector2, color:pygame.Color = (255, 255, 255)): # Default - White
+def draw_line(P0:vector2, P1:vector2, color:pygame.Color = (0, 0, 0)): # Default - black
     if abs(P1.x - P0.x) > abs(P1.y - P0.y):
         # Line is more horizontal
         # make sure that x0 < x1
@@ -81,7 +82,50 @@ def draw_line(P0:vector2, P1:vector2, color:pygame.Color = (255, 255, 255)): # D
         for y in range(P0.y, P1.y):
             draw_pixel(xs[y - P0.y], y, color, screen)
 
-def interpolate(i0:int, d0:float, i1:int, d1:float):
+def draw_wireframe_triange(P0:vector2, P1:vector2, P2:vector2, color):
+    draw_line(P0, P1, color)
+    draw_line(P1, P2, color)
+    draw_line(P2, P0, color)
+
+def draw_filled_triangle(P0:vector2, P1:vector2, P2:vector2, color):
+    """
+    for each norizontal line y between the triangle's top and bottom:
+        compute x_left and x_right for this y
+        draw_line(x_left, y, x_right, y, color)
+    """
+    # Sort triangle point's by hight (y)
+    if P1.y < P0.y: P1, P0 = P0, P1
+    if P2.y < P0.y: P2, P0 = P0, P2
+    if P2.y < P1.y: P2, P1 = P1, P2
+
+    # Compute the x coordinates of the tiangle edges
+    x01:list = interpolate(P0.y, P0.x, P1.y, P1.x)
+    x12:list = interpolate(P1.y, P1.x, P2.y, P2.x)
+    x02:list = interpolate(P0.y, P0.x, P2.y, P2.x)
+
+    # Concatenate the short sides
+
+    #x01.pop()
+    x012 = x01 + x12
+
+    # Determine which is left and which is right
+    middle = math.floor(len(x02) / 2)
+    if x02[middle] < x012[middle]:
+        x_left = x02
+        x_right = x012
+    else:
+        x_left = x012
+        x_right = x02
+    
+    # Draw the horizontal segments
+    
+    for y in range(P0.y, P2.y):
+        #print(f"y:{y}, P0.y:{P0.y}, dif:{y - P0.y}, x_right_lenth:{len(x_right)}")
+
+        for x in range(int(x_left[y - P0.y]), int(x_right[y - P0.y])):
+            draw_pixel(x, y, color, screen)
+
+def interpolate(i0:int, d0:float, i1:int, d1:float)->list[float]:
     """Linear interpolates from d0 to d1 in i1 - 10 steps"""
     if i0 == i1:
         return [d0]
