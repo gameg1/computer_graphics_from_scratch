@@ -64,29 +64,34 @@ def main():
     pygame.quit()
 
 def draw_line(P0:vector2, P1:vector2, color:pygame.Color = (255, 255, 255)): # Default - White
-    dx = P1.x - P0.x
-    dy = P1.y - P0.y
-    if abs(dx) > abs(dy):
+    if abs(P1.x - P0.x) > abs(P1.y - P0.y):
         # Line is more horizontal
         # make sure that x0 < x1
         if P0.x > P1.x:
             P0, P1 = P1, P0
-        a = dy / dx
-        y = P0.y
+        ys = interpolate(P0.x, P0.y, P1.x, P1.y)
         for x in range(P0.x, P1.x):
-            draw_pixel(x, y, color, screen)
-            y = y + a
+            draw_pixel(x, ys[x-P0.x], color, screen)
     else:
         # Line is more vertical
         # Make sure y0 < y1:
         if P0.y > P1.y:
             P0, P1 = P1, P0
-        a = dx / dy
-        x = P0.x
+        xs = interpolate(P0.y, P0.x, P1.y, P1.x)
         for y in range(P0.y, P1.y):
-            draw_pixel(x, y, color, screen)
-            x = x + a
+            draw_pixel(xs[y - P0.y], y, color, screen)
 
+def interpolate(i0:int, d0:float, i1:int, d1:float):
+    """Linear interpolates from d0 to d1 in i1 - 10 steps"""
+    if i0 == i1:
+        return [d0]
+    values=[]
+    a = (d1 - d0) / (i1 - i0)
+    d = d0
+    for i in range(i0, i1):
+        values.append(d)
+        d = d + a
+    return values
 
 if __name__ == "__main__":
     main()
