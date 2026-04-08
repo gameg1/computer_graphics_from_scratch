@@ -53,7 +53,7 @@ def main():
         #     for canvas_y in range(-(HEIGHT // 2), HEIGHT // 2, 2):
         #         pass
 
-        draw_filled_triangle(vector2(-200, -250), vector2(200, 50), vector2(20, 250),color=(0, 255, 0))
+        draw_shaded_triangle(vector3(-200, -250, 0.0), vector3(200, 50, 0), vector3(20, 250, 1),color=(0, 255, 0))
         draw_wireframe_triange(vector2(-200, -250), vector2(200, 50), vector2(20, 250),color=(255, 255, 255))
 
 
@@ -124,6 +124,57 @@ def draw_filled_triangle(P0:vector2, P1:vector2, P2:vector2, color):
 
         for x in range(int(x_left[y - P0.y]), int(x_right[y - P0.y])):
             draw_pixel(x, y, color, screen)
+
+def draw_shaded_triangle(P0:vector3, P1:vector3, P2:vector3, color:pygame.Color):
+    # Simular to draw_filled_triangle but uses vec3's to store a value H in the Z direction, ranging from 0 to 1.
+    
+    # Sort the points so that P0.y <= P1.y <= P2.y
+    if P1.y < P0.y: P1, P0 = P0, P1
+    if P2.y < P0.y: P2, P0 = P0, P1
+    if P2.y < P1.y: P2, P1 = P1, P2
+
+    # Compute the x coordinates and h values of the triangle edges
+    x01 = interpolate(P0.y, P0.x, P1.y, P1.x)
+    h01 = interpolate(P0.y, P0.z, P1.y, P1.z)
+
+    x12 = interpolate(P1.y, P1.x, P2.y, P2.x)
+    h12 = interpolate(P1.y, P0.z, P2.y, P2.z)
+
+    x02 = interpolate(P0.y, P0.x, P2.y, P2.x)
+    h02 = interpolate(P0.y, P0.z, P2.y, P2.z)
+
+    # Concatenate the short sides
+    #x01.pop()
+    x012 = x01 + x12
+
+    #h01.pop()
+    h012 = h01 + h12
+
+    # Determine which is left and which is right
+    m = math.floor(len(x012)/2)
+    if x02[m] < x012[m]:
+        x_left = x02
+        h_left = h02
+
+        x_right = x012
+        h_right = h012
+    else:
+        x_left = x012
+        h_left = h012
+
+        x_right = x02
+        h_right = h02
+
+    # Draw the horizontal segments
+    for y in range(P0.y, P2.y):
+        x_l = int(x_left[y - P0.y])
+        x_r = int(x_right[y - P0.y])
+
+        h_segment = interpolate(x_l, h_left[y - P0.y],x_r, h_right[y - P0.y])
+        for x in range(x_l, x_r):
+            r,g,b = color
+            shaded_color = pygame.Color(int(r * h_segment[x - x_l]), int(g * h_segment[x - x_l]), int(b * h_segment[x - x_l]))
+            draw_pixel(x ,y, shaded_color, screen=screen)
 
 def interpolate(i0:int, d0:float, i1:int, d1:float)->list[float]:
     """Linear interpolates from d0 to d1 in i1 - 10 steps"""
