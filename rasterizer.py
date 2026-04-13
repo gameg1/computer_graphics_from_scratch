@@ -16,11 +16,11 @@ pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
 # Camera Info
-Camera_pos:vector3 = vector3(0, 0, 1) # X, Y, Z - At origin point
+Camera_pos:vector3 = vector3(0, 0, 0) # X, Y, Z - At origin point
 Camera_rotation = [
-    [0.7071, 0, -0.7071],
-    [     0, 1,       0],
-    [0.7071, 0,  0.7071],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
 ]
 Camera_vector:vector3 = vector3(0, 0, 1) # Unit vector pointing towards Z+
 
@@ -53,7 +53,7 @@ def main():
         #     for canvas_y in range(-(HEIGHT // 2), HEIGHT // 2, 2):
         #         pass
 
-        draw_shaded_triangle(vector3(-200, -250, 0.0), vector3(200, 50, 0), vector3(20, 250, 1),color=(0, 255, 0))
+        draw_shaded_triangle(vector3(-200, -250, 0.0), vector3(200, 50, 0.0), vector3(20, 250, 1.0),color=(0, 255, 0))
         draw_wireframe_triange(vector2(-200, -250), vector2(200, 50), vector2(20, 250),color=(255, 255, 255))
 
 
@@ -105,7 +105,7 @@ def draw_filled_triangle(P0:vector2, P1:vector2, P2:vector2, color):
 
     # Concatenate the short sides
 
-    #x01.pop()
+    x01.pop()
     x012 = x01 + x12
 
     # Determine which is left and which is right
@@ -138,16 +138,16 @@ def draw_shaded_triangle(P0:vector3, P1:vector3, P2:vector3, color:pygame.Color)
     h01 = interpolate(P0.y, P0.z, P1.y, P1.z)
 
     x12 = interpolate(P1.y, P1.x, P2.y, P2.x)
-    h12 = interpolate(P1.y, P0.z, P2.y, P2.z)
+    h12 = interpolate(P1.y, P1.z, P2.y, P2.z)
 
     x02 = interpolate(P0.y, P0.x, P2.y, P2.x)
     h02 = interpolate(P0.y, P0.z, P2.y, P2.z)
 
     # Concatenate the short sides
-    #x01.pop()
+    x01.pop()
     x012 = x01 + x12
 
-    #h01.pop()
+    h01.pop()
     h012 = h01 + h12
 
     # Determine which is left and which is right
@@ -166,14 +166,17 @@ def draw_shaded_triangle(P0:vector3, P1:vector3, P2:vector3, color:pygame.Color)
         h_right = h02
 
     # Draw the horizontal segments
-    for y in range(P0.y, P2.y):
+    for y in range(P0.y, P2.y -1):
         x_l = int(x_left[y - P0.y])
         x_r = int(x_right[y - P0.y])
-
         h_segment = interpolate(x_l, h_left[y - P0.y],x_r, h_right[y - P0.y])
         for x in range(x_l, x_r):
             r,g,b = color
-            shaded_color = pygame.Color(int(r * h_segment[x - x_l]), int(g * h_segment[x - x_l]), int(b * h_segment[x - x_l]))
+            shaded_r = int(r * h_segment[x - x_l])
+            shaded_g = int(g * h_segment[x - x_l])
+            shaded_b = int(b * h_segment[x - x_l])
+            #print(shaded_r, shaded_g, shaded_b)
+            shaded_color = pygame.Color(shaded_r, shaded_g, shaded_b)
             draw_pixel(x ,y, shaded_color, screen=screen)
 
 def interpolate(i0:int, d0:float, i1:int, d1:float)->list[float]:
