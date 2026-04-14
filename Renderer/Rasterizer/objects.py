@@ -1,5 +1,5 @@
 from vector import *
-from Rasterizer.rasterizer import draw_line, project_vertex
+from Renderer.Rasterizer.rasterizer import *
 import pygame
 
 class cube_3d:

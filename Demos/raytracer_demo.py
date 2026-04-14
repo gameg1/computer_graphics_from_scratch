@@ -1,14 +1,15 @@
-from Raytracer.raytracer import *
-from vector import *
-from Raytracer.objects import *
+import sys
+sys.path.append('../')
+from Renderer.Raytracer.raytracer import *
+from Renderer.Raytracer.objects import *
+from settings import *
 import pygame
 import pygame.gfxdraw
+from vector import *
 import math
 
 # TODO: Seperate the raytracer software and the objects with the scene.
 
-WIDTH = 600
-HEIGHT = 600
 pygame.init()
 
 
@@ -55,8 +56,8 @@ def main():
                 running = False
 
         # Determine which square on the grid corresponds to this square on the canvas
-        for canvas_x in range(-(WIDTH // 2), WIDTH // 2, 2):
-            for canvas_y in range(-(HEIGHT // 2), HEIGHT // 2, 2):
+        for canvas_x in range(-(WIDTH // 2), WIDTH // 2):
+            for canvas_y in range(-(HEIGHT // 2), HEIGHT // 2):
 
                 # Converts each pixel on the canvas (canvas_x and canvas_y) to a 3d point on the viewport (viewport_x, viewport_y, viewport_z)
                 direction:vector3 = multiplyMV(Camera_rotation, canvas_to_viewport(canvas_x, canvas_y))
@@ -64,7 +65,7 @@ def main():
                 color = trace_ray(Camera_pos, direction, 1, math.inf,scene = scene, recursion_depth= 3 , background_color = BACKGROUND_COLOR)
 
                 # Paint the square with that color
-                draw_pixel(canvas_x, canvas_y, color, screen = screen)
+                draw_pixel(canvas_x, canvas_y, color)
 
         # End render
         pygame.display.flip()

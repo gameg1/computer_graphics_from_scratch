@@ -1,6 +1,6 @@
 import pygame
 from settings import *
-from Raytracer.objects import *
+from Renderer.Raytracer.objects import *
 from vector import *
 
 
