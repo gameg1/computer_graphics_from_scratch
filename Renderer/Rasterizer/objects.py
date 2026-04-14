@@ -34,4 +34,4 @@ class cube_3d:
         draw_line(project_vertex(self.vAf), project_vertex(self.vAb), pygame.Color(0, 255, 0))
         draw_line(project_vertex(self.vBf), project_vertex(self.vBb), pygame.Color(0, 255, 0))
         draw_line(project_vertex(self.vCf), project_vertex(self.vCb), pygame.Color(0, 255, 0))
-        draw_line(project_vertex(self.vDf), project_vertex(self.vAb), pygame.Color(0, 255, 0))
+        draw_line(project_vertex(self.vDf), project_vertex(self.vDb), pygame.Color(0, 255, 0))
