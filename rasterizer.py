@@ -1,9 +1,42 @@
 from raytracer import *
 from vector import *
-from objects import *
 import pygame
 import pygame.gfxdraw
 import math
+
+class cube_3d:
+    def __init__(self, vAf:vector3, vBf:vector3, vCf:vector3, vDf:vector3, vAb:vector3, vBb:vector3, vCb:vector3, vDb:vector3):
+        # The four front vertices
+        self.vAf:vector3 = vAf
+        self.vBf:vector3 = vBf
+        self.vCf:vector3 = vCf
+        self.vDf:vector3 = vDf
+
+        # The four back vertices
+        self.vAb:vector3 = vAb
+        self.vBb:vector3 = vBb
+        self.vCb:vector3 = vCb
+        self.vDb:vector3 = vDb
+
+    def draw(self, color= pygame.Color(255, 255, 255)):
+        # Front face
+        draw_line(project_vertex(self.vAf), project_vertex(self.vBf),pygame.Color(0, 0, 255))
+        draw_line(project_vertex(self.vBf), project_vertex(self.vCf),pygame.Color(0, 0, 255))
+        draw_line(project_vertex(self.vCf), project_vertex(self.vDf),pygame.Color(0, 0, 255))
+        draw_line(project_vertex(self.vDf), project_vertex(self.vAf),pygame.Color(0, 0, 255))
+
+        # Back face
+
+        draw_line(project_vertex(self.vAb), project_vertex(self.vBb), pygame.Color(255, 0, 0))
+        draw_line(project_vertex(self.vBb), project_vertex(self.vCb), pygame.Color(255, 0, 0))
+        draw_line(project_vertex(self.vCb), project_vertex(self.vDb), pygame.Color(255, 0, 0))
+        draw_line(project_vertex(self.vDb), project_vertex(self.vAb), pygame.Color(255, 0, 0))
+
+        # Front to back lines
+        draw_line(project_vertex(self.vAf), project_vertex(self.vAb), pygame.Color(0, 255, 0))
+        draw_line(project_vertex(self.vBf), project_vertex(self.vBb), pygame.Color(0, 255, 0))
+        draw_line(project_vertex(self.vCf), project_vertex(self.vCb), pygame.Color(0, 255, 0))
+        draw_line(project_vertex(self.vDf), project_vertex(self.vDb), pygame.Color(0, 255, 0))
 
 # TODO: Seperate the raytracer software and the objects with the scene.
 
@@ -36,6 +69,16 @@ scene = {
         }
 
 
+cube:cube_3d = cube_3d(
+vector3(-2, -0.5, 5),
+vector3(-2,  0.5, 5),
+vector3(-1,  0.5, 5),
+vector3(-1, -0.5, 5),
+vector3(-2, -0.5, 6),
+vector3(-2,  0.5, 6),
+vector3(-1,  0.5, 6),
+vector3(-1, -0.5, 6),
+)
 
 
 def main():
@@ -53,9 +96,9 @@ def main():
         #     for canvas_y in range(-(HEIGHT // 2), HEIGHT // 2, 2):
         #         pass
 
-        draw_shaded_triangle(vector3(-200, -250, 0.0), vector3(200, 50, 0.0), vector3(20, 250, 1.0),color=(0, 255, 0))
-        draw_wireframe_triange(vector2(-200, -250), vector2(200, 50), vector2(20, 250),color=(255, 255, 255))
-
+        # draw_shaded_triangle(vector3(-200, -250, 0.0), vector3(200, 50, 0.0), vector3(20, 250, 1.0),color=(0, 255, 0))
+        # draw_wireframe_triange(vector2(-200, -250), vector2(200, 50), vector2(20, 250),color=(255, 255, 255))
+        cube.draw()
 
 
         # End render
@@ -63,6 +106,12 @@ def main():
         clock.tick(60)
 
     pygame.quit()
+
+def viewport_to_canvas(x, y):
+    return vector2(int(x * WIDTH/viewport_width),int( y*HEIGHT/viewport_height))
+
+def project_vertex(v:vector3):
+    return viewport_to_canvas(v.x * viewport_distance / v.z, v.y * viewport_distance / v.z)
 
 def draw_line(P0:vector2, P1:vector2, color:pygame.Color = (0, 0, 0)): # Default - black
     if abs(P1.x - P0.x) > abs(P1.y - P0.y):
@@ -72,7 +121,7 @@ def draw_line(P0:vector2, P1:vector2, color:pygame.Color = (0, 0, 0)): # Default
             P0, P1 = P1, P0
         ys = interpolate(P0.x, P0.y, P1.x, P1.y)
         for x in range(P0.x, P1.x):
-            draw_pixel(x, ys[x-P0.x], color, screen)
+            draw_pixel(x, ys[x-P0.x], color,)
     else:
         # Line is more vertical
         # Make sure y0 < y1:
@@ -80,7 +129,7 @@ def draw_line(P0:vector2, P1:vector2, color:pygame.Color = (0, 0, 0)): # Default
             P0, P1 = P1, P0
         xs = interpolate(P0.y, P0.x, P1.y, P1.x)
         for y in range(P0.y, P1.y):
-            draw_pixel(xs[y - P0.y], y, color, screen)
+            draw_pixel(xs[y - P0.y], y, color,)
 
 def draw_wireframe_triange(P0:vector2, P1:vector2, P2:vector2, color):
     draw_line(P0, P1, color)
@@ -177,7 +226,7 @@ def draw_shaded_triangle(P0:vector3, P1:vector3, P2:vector3, color:pygame.Color)
             shaded_b = int(b * h_segment[x - x_l])
             #print(shaded_r, shaded_g, shaded_b)
             shaded_color = pygame.Color(shaded_r, shaded_g, shaded_b)
-            draw_pixel(x ,y, shaded_color, screen=screen)
+            draw_pixel(x ,y, shaded_color)
 
 def interpolate(i0:int, d0:float, i1:int, d1:float)->list[float]:
     """Linear interpolates from d0 to d1 in i1 - 10 steps"""
@@ -190,6 +239,8 @@ def interpolate(i0:int, d0:float, i1:int, d1:float)->list[float]:
         values.append(d)
         d = d + a
     return values
+
+
 
 if __name__ == "__main__":
     main()
