@@ -1,6 +1,6 @@
 import pygame
 from settings import *
-from objects import *
+from Raytracer.objects import *
 from vector import *
 
 
@@ -15,7 +15,7 @@ def draw_pixel(x, y, color:pygame.Color):
 
 def canvas_to_viewport(x:int, y:int):
     """Returns a vector3 from a canvas x, y co-ordernents to viewport x, y, x"""
-    return vector3(x * (viewport_width / WIDTH), y * (viewport_height / HEIGHT), viewport_distance)
+    return vector3(x * (VIEWPORT_WIDTH / WIDTH), y * (VIEWPORT_HIGHT / HEIGHT), VIEWPORT_DISTANCE)
 
 def trace_ray(O:vector3, d:vector3, t_min, t_max, scene, recursion_depth = 0, background_color = pygame.Color(0, 0, 0)):
     closest_sphere, closest_t = closest_intersection(O, d, t_min = t_min, t_max = t_max, scene = scene)

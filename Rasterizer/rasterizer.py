@@ -1,117 +1,27 @@
-from raytracer import *
+from settings import *
 from vector import *
+from Rasterizer.objects import *
 import pygame
 import pygame.gfxdraw
 import math
 
-class cube_3d:
-    def __init__(self, vAf:vector3, vBf:vector3, vCf:vector3, vDf:vector3, vAb:vector3, vBb:vector3, vCb:vector3, vDb:vector3):
-        # The four front vertices
-        self.vAf:vector3 = vAf
-        self.vBf:vector3 = vBf
-        self.vCf:vector3 = vCf
-        self.vDf:vector3 = vDf
+def draw_pixel(x, y, color:pygame.Color):
+    """Draws a pixel to the screen with 0,0 being the center of the screen"""
+    Screen_X = int((WIDTH /2) + x)
+    Screen_Y = int((HEIGHT /2) - y)
+    r, g, b = max(0, color[0]), max(0, color[1]), max(0, color[2])
 
-        # The four back vertices
-        self.vAb:vector3 = vAb
-        self.vBb:vector3 = vBb
-        self.vCb:vector3 = vCb
-        self.vDb:vector3 = vDb
 
-    def draw(self, color= pygame.Color(255, 255, 255)):
-        # Front face
-        draw_line(project_vertex(self.vAf), project_vertex(self.vBf),pygame.Color(0, 0, 255))
-        draw_line(project_vertex(self.vBf), project_vertex(self.vCf),pygame.Color(0, 0, 255))
-        draw_line(project_vertex(self.vCf), project_vertex(self.vDf),pygame.Color(0, 0, 255))
-        draw_line(project_vertex(self.vDf), project_vertex(self.vAf),pygame.Color(0, 0, 255))
+    pygame.gfxdraw.pixel(pygame.display.get_surface(), Screen_X, Screen_Y, (r, g, b))
 
-        # Back face
-
-        draw_line(project_vertex(self.vAb), project_vertex(self.vBb), pygame.Color(255, 0, 0))
-        draw_line(project_vertex(self.vBb), project_vertex(self.vCb), pygame.Color(255, 0, 0))
-        draw_line(project_vertex(self.vCb), project_vertex(self.vDb), pygame.Color(255, 0, 0))
-        draw_line(project_vertex(self.vDb), project_vertex(self.vAb), pygame.Color(255, 0, 0))
-
-        # Front to back lines
-        draw_line(project_vertex(self.vAf), project_vertex(self.vAb), pygame.Color(0, 255, 0))
-        draw_line(project_vertex(self.vBf), project_vertex(self.vBb), pygame.Color(0, 255, 0))
-        draw_line(project_vertex(self.vCf), project_vertex(self.vCb), pygame.Color(0, 255, 0))
-        draw_line(project_vertex(self.vDf), project_vertex(self.vDb), pygame.Color(0, 255, 0))
 
 # TODO: Seperate the raytracer software and the objects with the scene.
 
-WIDTH = 600
-HEIGHT = 600
-pygame.init()
-
-
-# Window set up
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-
-# Camera Info
-Camera_pos:vector3 = vector3(0, 0, 0) # X, Y, Z - At origin point
-Camera_rotation = [
-    [0, 0, 0],
-    [0, 0, 0],
-    [0, 0, 0],
-]
-Camera_vector:vector3 = vector3(0, 0, 1) # Unit vector pointing towards Z+
-
-        
-# Set up the envioment
-BACKGROUND_COLOR = pygame.Color(255, 255, 255)
-scene = {
-        "objects":[
-        ],
-        "lights":
-        [
-        ]
-        }
-
-
-cube:cube_3d = cube_3d(
-vector3(-2, -0.5, 5),
-vector3(-2,  0.5, 5),
-vector3(-1,  0.5, 5),
-vector3(-1, -0.5, 5),
-vector3(-2, -0.5, 6),
-vector3(-2,  0.5, 6),
-vector3(-1,  0.5, 6),
-vector3(-1, -0.5, 6),
-)
-
-
-def main():
-
-    clock = pygame.time.Clock()
-    running = True
-    # Runs per frame
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-
-        # # Determine which square on the grid corresponds to this square on the canvas
-        # for canvas_x in range(-(WIDTH // 2), WIDTH // 2, 2):
-        #     for canvas_y in range(-(HEIGHT // 2), HEIGHT // 2, 2):
-        #         pass
-
-        # draw_shaded_triangle(vector3(-200, -250, 0.0), vector3(200, 50, 0.0), vector3(20, 250, 1.0),color=(0, 255, 0))
-        # draw_wireframe_triange(vector2(-200, -250), vector2(200, 50), vector2(20, 250),color=(255, 255, 255))
-        cube.draw()
-
-
-        # End render
-        pygame.display.flip()
-        clock.tick(60)
-
-    pygame.quit()
-
 def viewport_to_canvas(x, y):
-    return vector2(int(x * WIDTH/viewport_width),int( y*HEIGHT/viewport_height))
+    return vector2(int(x * WIDTH/VIEWPORT_WIDTH),int( y*HEIGHT/VIEWPORT_HIGHT))
 
 def project_vertex(v:vector3):
-    return viewport_to_canvas(v.x * viewport_distance / v.z, v.y * viewport_distance / v.z)
+    return viewport_to_canvas(v.x * VIEWPORT_DISTANCE / v.z, v.y * VIEWPORT_DISTANCE / v.z)
 
 def draw_line(P0:vector2, P1:vector2, color:pygame.Color = (0, 0, 0)): # Default - black
     if abs(P1.x - P0.x) > abs(P1.y - P0.y):
@@ -172,7 +82,7 @@ def draw_filled_triangle(P0:vector2, P1:vector2, P2:vector2, color):
         #print(f"y:{y}, P0.y:{P0.y}, dif:{y - P0.y}, x_right_lenth:{len(x_right)}")
 
         for x in range(int(x_left[y - P0.y]), int(x_right[y - P0.y])):
-            draw_pixel(x, y, color, screen)
+            draw_pixel(x, y, color)
 
 def draw_shaded_triangle(P0:vector3, P1:vector3, P2:vector3, color:pygame.Color):
     # Simular to draw_filled_triangle but uses vec3's to store a value H in the Z direction, ranging from 0 to 1.
@@ -239,8 +149,3 @@ def interpolate(i0:int, d0:float, i1:int, d1:float)->list[float]:
         values.append(d)
         d = d + a
     return values
-
-
-
-if __name__ == "__main__":
-    main()
