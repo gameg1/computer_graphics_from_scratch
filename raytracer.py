@@ -4,14 +4,14 @@ from objects import *
 from vector import *
 
 
-def draw_pixel(x, y, color:pygame.Color, screen):
+def draw_pixel(x, y, color:pygame.Color):
     """Draws a pixel to the screen with 0,0 being the center of the screen"""
     Screen_X = int((WIDTH /2) + x)
     Screen_Y = int((HEIGHT /2) - y)
     r, g, b = clamp(color[0]), clamp(color[1]), clamp(color[2])
 
 
-    pygame.gfxdraw.pixel(screen, Screen_X, Screen_Y, (r, g, b))
+    pygame.gfxdraw.pixel(pygame.display.get_surface(), Screen_X, Screen_Y, (r, g, b))
 
 def canvas_to_viewport(x:int, y:int):
     """Returns a vector3 from a canvas x, y co-ordernents to viewport x, y, x"""
