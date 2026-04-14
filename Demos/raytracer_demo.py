@@ -1,6 +1,6 @@
-from raytracer import *
+from Raytracer.raytracer import *
 from vector import *
-from objects import *
+from Raytracer.objects import *
 import pygame
 import pygame.gfxdraw
 import math

@@ -3,6 +3,6 @@ WIDTH = 600
 HEIGHT = 600
 
 # Viewport Info
-viewport_width = 1
-viewport_height = 1
-viewport_distance = 1
+VIEWPORT_WIDTH = 1
+VIEWPORT_HIGHT = 1
+VIEWPORT_DISTANCE = 1
