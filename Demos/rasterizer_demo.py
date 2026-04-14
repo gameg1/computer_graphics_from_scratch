@@ -1,7 +1,13 @@
-from settings import *
+import sys
+sys.path.append('../')
+from Renderer.Rasterizer.rasterizer import *
+from Renderer.Rasterizer.objects import *
 import pygame
-from Rasterizer.objects import *
+from settings import *
 from vector import *
+
+
+
 pygame.init()
 
 

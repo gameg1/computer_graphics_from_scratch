@@ -1,6 +1,5 @@
 from settings import *
 from vector import *
-from Rasterizer.objects import *
 import pygame
 import pygame.gfxdraw
 import math
