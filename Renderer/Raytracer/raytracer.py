@@ -1,34 +1,27 @@
-import pygame
+import sys
+sys.path.append('../')
+from pyray import *
 from settings import *
 from Renderer.Raytracer.objects import *
-from vector import *
+import math
 
-
-def draw_pixel(x, y, color:pygame.Color):
-    """Draws a pixel to the screen with 0,0 being the center of the screen"""
-    Screen_X = int((WIDTH /2) + x)
-    Screen_Y = int((HEIGHT /2) - y)
-    r, g, b = clamp(color[0]), clamp(color[1]), clamp(color[2])
-
-
-    pygame.gfxdraw.pixel(pygame.display.get_surface(), Screen_X, Screen_Y, (r, g, b))
 
 def canvas_to_viewport(x:int, y:int):
-    """Returns a vector3 from a canvas x, y co-ordernents to viewport x, y, x"""
-    return vector3(x * (VIEWPORT_WIDTH / WIDTH), y * (VIEWPORT_HIGHT / HEIGHT), VIEWPORT_DISTANCE)
+    """Returns a Vector3 from a canvas x, y co-ordernents to viewport x, y, x"""
+    return Vector3(x * (VIEWPORT_WIDTH / WIDTH), y * (VIEWPORT_HIGHT / HEIGHT), VIEWPORT_DISTANCE)
 
-def trace_ray(O:vector3, d:vector3, t_min, t_max, scene, recursion_depth = 0, background_color = pygame.Color(0, 0, 0)):
+def trace_ray(O:Vector3, d:Vector3, t_min, t_max, scene, recursion_depth = 0, background_color = Color(0, 0, 0, 255))->Color:
     closest_sphere, closest_t = closest_intersection(O, d, t_min = t_min, t_max = t_max, scene = scene)
     if closest_sphere == None:
         return background_color
-    
 
-    point = O + d * closest_t  # Compute intersection
-    normal = closest_sphere.normal(point)
-    normal = normal.normalized()
-    intensity = compute_lighting(point, normal, -d, closest_sphere.specular, scene)
-    r, g, b = closest_sphere.color
-    local_color = pygame.Color(clamp(int(r * intensity)), clamp(int(g * intensity)), clamp(int(b * intensity)))
+ 
+
+    point = vector3_add(O, vector3_multiply_scalar(d, closest_t))  # Compute intersection
+    normal = vector3_subtract(point, closest_sphere.pos)
+    normal = vector3_divide_scalar(normal, vector3_length(normal)) 
+    intensity = compute_lighting(point, normal, vector3_negate(d), closest_sphere.specular, scene)
+    local_color = Color(min(255,int(closest_sphere.color.r * intensity)), min(255,int(closest_sphere.color.g * intensity)), min(255,int(closest_sphere.color.b * intensity)), 255)
 
     # If we hit hte recusion limit or the object is not reglective, we're done
     r = closest_sphere.reflective
@@ -36,12 +29,28 @@ def trace_ray(O:vector3, d:vector3, t_min, t_max, scene, recursion_depth = 0, ba
         return local_color
     
     # Compute hte reflected color
-    R = reflect_ray(-d, normal = normal)
-    reflected_color = trace_ray(point, R, 0.001,  math.inf, scene, recursion_depth - 1, background_color)
+    R = reflect_ray(vector3_negate(d), normal = normal)
 
-    
-    return pygame.Color(int(local_color.r * (1 - r) + reflected_color.r * r), int(local_color.g * (1 - r) + reflected_color.g * r), int(local_color.b * (1 - r) + reflected_color.b * r))
+    reflected_color:Color = trace_ray(point, R, 0.001,  math.inf, scene, recursion_depth - 1, background_color = background_color)
+    try:
+        rc_r = reflected_color[0]
+        rc_g = reflected_color[1]
+        rc_b = reflected_color[2]
+        return Color(int(local_color.r * (1 - r) + rc_r * r), int(local_color.g * (1 - r) + rc_g * r), int(local_color.b * (1 - r) + rc_b * r), 255)
+    except TypeError:
+        pass
+    try:
+        rc_r, rc_g, rc_b, rc_a = reflected_color
+        return Color(int(local_color.r * (1 - r) + rc_r * r), int(local_color.g * (1 - r) + rc_g * r), int(local_color.b * (1 - r) + rc_b * r), 255)
+    except TypeError:
+        pass
+    return Color(int(local_color.r * (1 - r) + reflected_color.r * r), int(local_color.g * (1 - r) + reflected_color.g * r), int(local_color.b * (1 - r) + reflected_color.b * r), 255)
 
+def vector3_multiply_scalar(v:Vector3, scalar:float)->Vector3:
+    return Vector3(v.x * scalar, v.y * scalar, v.z * scalar)   
+
+def vector3_divide_scalar(v:Vector3, scalar:float)->Vector3:
+    return Vector3(v.x / scalar, v.y / scalar, v.z / scalar)
 
 def closest_intersection(O, direction, t_min, t_max, scene:dict)-> tuple[sphere, float]:
     closest_t = math.inf
@@ -58,13 +67,13 @@ def closest_intersection(O, direction, t_min, t_max, scene:dict)-> tuple[sphere,
     
     return closest_sphere, closest_t
 
-def intersect_ray_sphere(O:vector3, D:vector3, sphere:sphere):
+def intersect_ray_sphere(O:Vector3, D:Vector3, sphere:sphere):
     r = sphere.radius
-    CO = O - sphere.pos
-
-    a = vector3.dot_product(D, D)
-    b = 2 * vector3.dot_product(CO, D)
-    c = vector3.dot_product(CO, CO) - r*r
+    CO = vector3_subtract(O, sphere.pos)
+    
+    a = vector3_length_sqr(D)
+    b = 2 * vector3_dot_product(CO, D)
+    c = vector3_length_sqr(CO) - r*r
 
     discriminant = b*b - 4*a*c
     if discriminant < 0:
@@ -75,7 +84,7 @@ def intersect_ray_sphere(O:vector3, D:vector3, sphere:sphere):
 
     return t1, t2
 
-def compute_lighting(point:vector3, normal:vector3, V:vector3, specular:int, scene):
+def compute_lighting(point:Vector3, normal:Vector3, V:Vector3, specular:int, scene):
     i:float = 0.0
     lights = scene["lights"]
     objects = scene["objects"]
@@ -84,7 +93,7 @@ def compute_lighting(point:vector3, normal:vector3, V:vector3, specular:int, sce
             i += light.intensity
         else:
             if light.type == light.POINT:
-                L = light.position - point
+                L = vector3_subtract(light.position, point)
                 t_max = 1
             elif light.type == light.DIRECTIONAL:
                 L = light.direction
@@ -95,26 +104,36 @@ def compute_lighting(point:vector3, normal:vector3, V:vector3, specular:int, sce
             if shadow_sphere != None: continue
             
             # Diffuse
-            n_dot_l = vector3.dot_product(normal, L)
+            n_dot_l = vector3_dot_product(normal, L)
             if n_dot_l > 0:
-                i += light.intensity * n_dot_l / (normal.magnitude() * L.magnitude())
+                i += light.intensity * n_dot_l / (vector3_length(normal) * vector3_length(L))
             
             # Specular
             if specular != -1:
-                reflection:vector3 = (normal * 2) * vector3.dot_product(normal, L) - L
-                r_dot_v = vector3.dot_product(reflection, V)
+                reflection:Vector3 = vector3_subtract(vector3_multiply_scalar(normal, vector3_dot_product(normal, L) * 2), L)
+                r_dot_v = vector3_dot_product(reflection, V)
                 if r_dot_v > 0:
-                    i += light.intensity * math.pow(r_dot_v / ((reflection.magnitude()) * (V.magnitude())), specular)
+
+                    i += light.intensity * math.pow(r_dot_v/ (vector3_length(reflection)*vector3_length(V)), specular)
 
     return i
 
-def reflect_ray(ray:vector3, normal:vector3):
-    return (normal * 2) * normal.dot_product(ray) - ray
+def multiplyMV(mat, vec):
+    result = [0, 0, 0]
+    vec = [vec.x, vec.y, vec.z]
 
-def clamp (n:int):
-    if n < 0:
-        return 0
-    elif n > 255:
-        return 255
-    else:
-        return n
+    for i in range(3):
+        for j in range(3):
+            result[i] += vec[j] * mat[i][j]
+
+    return Vector3(result[0], result[1], result[2])
+
+def reflect_ray(ray:Vector3, normal:Vector3)->Vector3:
+
+    return vector3_subtract(vector3_multiply_scalar(normal, vector3_dot_product(ray, normal)* 2), ray)
+
+
+# function ReflectRay(ray, normal) {
+#   return sub(mult(normal, mult(2 * dot_product(v1, v2):float)),v1)
+#   return v2.mul(2*v1.dot(v2)).sub(v1);
+#   return 2 * normal:vec * dot(normal, ray):float - ray
