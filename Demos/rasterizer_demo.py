@@ -2,51 +2,45 @@ import sys
 sys.path.append('../')
 from Renderer.Rasterizer.rasterizer import *
 from Renderer.Rasterizer.objects import *
-import pygame
+from pyray import *
 from settings import *
-from vector import *
 
 
 
-pygame.init()
+
 
 
 # Window set up
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+init_window(WIDTH, HEIGHT, "Rasterizer Demo")
 
 # Camera Info
-Camera_pos:vector3 = vector3(0, 0, 0) # X, Y, Z - At origin point
+Camera_pos:Vector3 = Vector3(0, 0, 0) # X, Y, Z - At origin point
 Camera_rotation = [
     [0, 0, 0],
     [0, 0, 0],
     [0, 0, 0],
 ]
-Camera_vector:vector3 = vector3(0, 0, 1) # Unit vector pointing towards Z+
+Camera_vector:Vector3 = Vector3(0, 0, 1) # Unit vector pointing towards Z+
 
 
 
 cube:cube_3d = cube_3d(
-vector3(-2, -0.5, 5),
-vector3(-2,  0.5, 5),
-vector3(-1,  0.5, 5),
-vector3(-1, -0.5, 5),
-vector3(-2, -0.5, 6),
-vector3(-2,  0.5, 6),
-vector3(-1,  0.5, 6),
-vector3(-1, -0.5, 6),
+Vector3(-2, -0.5, 5),
+Vector3(-2,  0.5, 5),
+Vector3(-1,  0.5, 5),
+Vector3(-1, -0.5, 5),
+Vector3(-2, -0.5, 6),
+Vector3(-2,  0.5, 6),
+Vector3(-1,  0.5, 6),
+Vector3(-1, -0.5, 6),
 )
 
 
 def main():
 
-    clock = pygame.time.Clock()
-    running = True
     # Runs per frame
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-
+    while not window_should_close():
+        begin_drawing()
         # # Determine which square on the grid corresponds to this square on the canvas
         # for canvas_x in range(-(WIDTH // 2), WIDTH // 2, 2):
         #     for canvas_y in range(-(HEIGHT // 2), HEIGHT // 2, 2):
@@ -58,10 +52,9 @@ def main():
 
 
         # End render
-        pygame.display.flip()
-        clock.tick(60)
+        end_drawing()
 
-    pygame.quit()
+    close_window()
 
 if __name__ == "__main__":
     main()

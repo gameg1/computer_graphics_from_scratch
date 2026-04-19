@@ -1,89 +1,42 @@
 from settings import *
-from vector import *
-import pygame
-import pygame.gfxdraw
+from pyray import *
 import math
 
-def draw_pixel(x, y, color:pygame.Color):
+def draw_pixel_ras(x, y, color:Color):
     """Draws a pixel to the screen with 0,0 being the center of the screen"""
     Screen_X = int((WIDTH /2) + x)
     Screen_Y = int((HEIGHT /2) - y)
-    r, g, b = max(0, color[0]), max(0, color[1]), max(0, color[2])
 
-
-    pygame.gfxdraw.pixel(pygame.display.get_surface(), Screen_X, Screen_Y, (r, g, b))
+    draw_pixel(Screen_X, Screen_Y, color)
 
 
 # TODO: Seperate the raytracer software and the objects with the scene.
 
 def viewport_to_canvas(x, y):
-    return vector2(int(x * WIDTH/VIEWPORT_WIDTH),int( y*HEIGHT/VIEWPORT_HIGHT))
+    return Vector2(int(x * WIDTH/VIEWPORT_WIDTH),int( y*HEIGHT/VIEWPORT_HIGHT))
 
-def project_vertex(v:vector3):
+def project_vertex(v:Vector3):
     return viewport_to_canvas(v.x * VIEWPORT_DISTANCE / v.z, v.y * VIEWPORT_DISTANCE / v.z)
 
-def draw_line(P0:vector2, P1:vector2, color:pygame.Color = (0, 0, 0)): # Default - black
+def draw_line_ras(P0:Vector2, P1:Vector2, color:Color = (0, 0, 0, 255)): # Default - black
     if abs(P1.x - P0.x) > abs(P1.y - P0.y):
         # Line is more horizontal
         # make sure that x0 < x1
         if P0.x > P1.x:
             P0, P1 = P1, P0
         ys = interpolate(P0.x, P0.y, P1.x, P1.y)
-        for x in range(P0.x, P1.x):
-            draw_pixel(x, ys[x-P0.x], color,)
+        for x in range(int(P0.x), int(P1.x)):
+            draw_pixel_ras(x, ys[int(x-P0.x)], color)
     else:
         # Line is more vertical
         # Make sure y0 < y1:
         if P0.y > P1.y:
             P0, P1 = P1, P0
         xs = interpolate(P0.y, P0.x, P1.y, P1.x)
-        for y in range(P0.y, P1.y):
-            draw_pixel(xs[y - P0.y], y, color,)
+        for y in range(int(P0.y), int(P1.y)):
+            draw_pixel_ras(xs[int(y - P0.y)], y, color)
 
-def draw_wireframe_triange(P0:vector2, P1:vector2, P2:vector2, color):
-    draw_line(P0, P1, color)
-    draw_line(P1, P2, color)
-    draw_line(P2, P0, color)
-
-def draw_filled_triangle(P0:vector2, P1:vector2, P2:vector2, color):
-    """
-    for each norizontal line y between the triangle's top and bottom:
-        compute x_left and x_right for this y
-        draw_line(x_left, y, x_right, y, color)
-    """
-    # Sort triangle point's by hight (y)
-    if P1.y < P0.y: P1, P0 = P0, P1
-    if P2.y < P0.y: P2, P0 = P0, P2
-    if P2.y < P1.y: P2, P1 = P1, P2
-
-    # Compute the x coordinates of the tiangle edges
-    x01:list = interpolate(P0.y, P0.x, P1.y, P1.x)
-    x12:list = interpolate(P1.y, P1.x, P2.y, P2.x)
-    x02:list = interpolate(P0.y, P0.x, P2.y, P2.x)
-
-    # Concatenate the short sides
-
-    x01.pop()
-    x012 = x01 + x12
-
-    # Determine which is left and which is right
-    middle = math.floor(len(x02) / 2)
-    if x02[middle] < x012[middle]:
-        x_left = x02
-        x_right = x012
-    else:
-        x_left = x012
-        x_right = x02
-    
-    # Draw the horizontal segments
-    
-    for y in range(P0.y, P2.y):
-        #print(f"y:{y}, P0.y:{P0.y}, dif:{y - P0.y}, x_right_lenth:{len(x_right)}")
-
-        for x in range(int(x_left[y - P0.y]), int(x_right[y - P0.y])):
-            draw_pixel(x, y, color)
-
-def draw_shaded_triangle(P0:vector3, P1:vector3, P2:vector3, color:pygame.Color):
+def draw_shaded_triangle(P0:Vector3, P1:Vector3, P2:Vector3, color:Color):
     # Simular to draw_filled_triangle but uses vec3's to store a value H in the Z direction, ranging from 0 to 1.
     
     # Sort the points so that P0.y <= P1.y <= P2.y
@@ -134,8 +87,8 @@ def draw_shaded_triangle(P0:vector3, P1:vector3, P2:vector3, color:pygame.Color)
             shaded_g = int(g * h_segment[x - x_l])
             shaded_b = int(b * h_segment[x - x_l])
             #print(shaded_r, shaded_g, shaded_b)
-            shaded_color = pygame.Color(shaded_r, shaded_g, shaded_b)
-            draw_pixel(x ,y, shaded_color)
+            shaded_color = Color(shaded_r, shaded_g, shaded_b, 255)
+            draw_pixel_ras(x, y, shaded_color)
 
 def interpolate(i0:int, d0:float, i1:int, d1:float)->list[float]:
     """Linear interpolates from d0 to d1 in i1 - 10 steps"""
@@ -144,7 +97,7 @@ def interpolate(i0:int, d0:float, i1:int, d1:float)->list[float]:
     values=[]
     a = (d1 - d0) / (i1 - i0)
     d = d0
-    for i in range(i0, i1):
+    for i in range(int(i0), int(i1)):
         values.append(d)
         d = d + a
     return values
