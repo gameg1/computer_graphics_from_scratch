@@ -1,53 +1,20 @@
 from Renderer.Rasterizer.rasterizer import *
 from pyray import *
 
-class cube_3d:
-    def __init__(self, vAf:Vector3, vBf:Vector3, vCf:Vector3, vDf:Vector3, vAb:Vector3, vBb:Vector3, vCb:Vector3, vDb:Vector3):
-        # The four front vertices
-        self.vAf = vAf
-        self.vBf = vBf
-        self.vCf = vCf
-        self.vDf = vDf
 
-        # The four back vertices
-        self.vAb = vAb
-        self.vBb = vBb
-        self.vCb = vCb
-        self.vDb = vDb
-
-    def draw(self, color= Color(255, 255, 255, 255)):
-        # Front face
-        draw_line_ras(project_vertex(self.vAf), project_vertex(self.vBf),Color(0, 0, 255, 255))
-        draw_line_ras(project_vertex(self.vBf), project_vertex(self.vCf),Color(0, 0, 255, 255))
-        draw_line_ras(project_vertex(self.vCf), project_vertex(self.vDf),Color(0, 0, 255, 255))
-        draw_line_ras(project_vertex(self.vDf), project_vertex(self.vAf),Color(0, 0, 255, 255))
-
-        # Back face
-
-        draw_line_ras(project_vertex(self.vAb), project_vertex(self.vBb), Color(255, 0, 0, 255))
-        draw_line_ras(project_vertex(self.vBb), project_vertex(self.vCb), Color(255, 0, 0, 255))
-        draw_line_ras(project_vertex(self.vCb), project_vertex(self.vDb), Color(255, 0, 0, 255))
-        draw_line_ras(project_vertex(self.vDb), project_vertex(self.vAb), Color(255, 0, 0, 255))
-
-        # Front to back lines
-        draw_line_ras(project_vertex(self.vAf), project_vertex(self.vAb), Color(0, 255, 0, 255))
-        draw_line_ras(project_vertex(self.vBf), project_vertex(self.vBb), Color(0, 255, 0, 255))
-        draw_line_ras(project_vertex(self.vCf), project_vertex(self.vCb), Color(0, 255, 0, 255))
-        draw_line_ras(project_vertex(self.vDf), project_vertex(self.vDb), Color(0, 255, 0, 255))
-
-class triangle_wireframe:
+class Triangle:
     def __init__(self, P0:Vector2, P1:Vector2, P2:Vector2, color:Color):
         self.P0 = P0
         self.P1 = P1
         self.P2 = P2
-        self.color = Color
+        self.color = color
     
     def draw(self):
         draw_line_ras(self.P0, self.P1, self.color)
         draw_line_ras(self.P1, self.P2, self.color)
         draw_line_ras(self.P2, self.P0, self.color)
 
-class triangle_filled:
+class Triangle_filled:
     def __init__(self, P0:Vector2, P1:Vector2, P2:Vector2, color:Color):
         self.P0 = P0
         self.P1 = P1
@@ -92,7 +59,7 @@ class triangle_filled:
             for x in range(int(x_left[y - self.P0.y]), int(x_right[y - self.P0.y])):
                 draw_pixel_ras(x, y, self.color)
 
-class triangle_shaded:
+class Triangle_shaded:
     def __init__(self, P0:Vector3, P1:Vector3, P2:Vector3, color:Color):
         self.P0 = P0
         self.P1 = P1
@@ -152,3 +119,47 @@ class triangle_shaded:
                 #print(shaded_r, shaded_g, shaded_b)
                 shaded_color = Color(shaded_r, shaded_g, shaded_b, 255)
                 draw_pixel_ras(x, y, shaded_color)
+
+class Cube_3d:
+    # Vertices
+    A = Vector3( 1,  1,  1)
+    B = Vector3(-1,  1,  1)
+    C = Vector3(-1, -1,  1)
+    D = Vector3( 1, -1,  1)
+    E = Vector3( 1,  1, -1)
+    F = Vector3(-1,  1, -1)
+    G = Vector3(-1, -1, -1)
+    H = Vector3( 1, -1, -1)
+    
+
+    # triangles
+    Tris = [
+        [0, 1, 2, RED],
+        [0, 2, 3, RED],
+        [4, 0, 3, GREEN],
+        [4, 3, 7, GREEN],
+        [5, 4, 7, BLUE],
+        [5, 7, 6, BLUE],
+        [1, 5, 6, YELLOW],
+        [1, 6, 2, YELLOW],
+        [4, 5, 1, PURPLE],
+        [4, 1, 0, PURPLE],
+        [2, 6, 7, SKYBLUE],
+        [2, 7, 3, SKYBLUE]
+        
+    ]
+
+
+    def __init__(self, pos:Vector3 = Vector3(0, 0, 0)):
+        self.pos = pos
+        self.verts = [
+                vector3_add(self.A, self.pos),
+                vector3_add(self.B, self.pos),
+                vector3_add(self.C, self.pos),
+                vector3_add(self.D, self.pos),
+                vector3_add(self.E, self.pos),
+                vector3_add(self.F, self.pos),
+                vector3_add(self.G, self.pos),
+                vector3_add(self.H, self.pos),
+            ]
+        

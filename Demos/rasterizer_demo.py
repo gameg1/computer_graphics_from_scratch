@@ -2,8 +2,9 @@ import sys
 sys.path.append('../')
 from Renderer.Rasterizer.rasterizer import *
 from Renderer.Rasterizer.objects import *
-from pyray import *
 from settings import *
+from pyray import *
+import math
 
 
 
@@ -24,16 +25,10 @@ Camera_vector:Vector3 = Vector3(0, 0, 1) # Unit vector pointing towards Z+
 
 
 
-cube:cube_3d = cube_3d(
-Vector3(-2, -0.5, 5),
-Vector3(-2,  0.5, 5),
-Vector3(-1,  0.5, 5),
-Vector3(-1, -0.5, 5),
-Vector3(-2, -0.5, 6),
-Vector3(-2,  0.5, 6),
-Vector3(-1,  0.5, 6),
-Vector3(-1, -0.5, 6),
-)
+scene = [Cube_3d(Vector3(-1.5, 0, 7)),
+         Cube_3d(Vector3(1.25, 2, 7.5)),
+         ]
+
 
 
 def main():
@@ -41,20 +36,38 @@ def main():
     # Runs per frame
     while not window_should_close():
         begin_drawing()
-        # # Determine which square on the grid corresponds to this square on the canvas
-        # for canvas_x in range(-(WIDTH // 2), WIDTH // 2, 2):
-        #     for canvas_y in range(-(HEIGHT // 2), HEIGHT // 2, 2):
-        #         pass
+        #clear_background(WHITE)
+        Render_scene(scene=scene)
 
-        # draw_shaded_triangle(vector3(-200, -250, 0.0), vector3(200, 50, 0.0), vector3(20, 250, 1.0),color=(0, 255, 0))
-        # draw_wireframe_triange(vector2(-200, -250), vector2(200, 50), vector2(20, 250),color=(255, 255, 255))
-        cube.draw()
-
+        #draw_line_ras(Vector2(-100,200), Vector2(200, -50), RED) # Debug line
 
         # End render
         end_drawing()
 
     close_window()
+
+def Render_scene(scene:list):
+    for i in scene:
+        Render_instance(i)
+
+
+def Render_instance(instance):
+    projected:list[Vector2] = []
+    for V in instance.verts:
+        projected.append(project_vertex(V))
+    
+    for T in instance.Tris:
+        Render_triangle(T, projected)
+
+def Render_triangle(T:list, projected:list[Vector2]):
+    #print(type(T.P0))
+    #print(projected)
+    tri = Triangle(
+        projected[T[0]],#P0
+        projected[T[1]],#P1
+        projected[T[2]],#P2
+        T[3], #Color
+    ).draw()
 
 if __name__ == "__main__":
     main()
