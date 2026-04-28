@@ -2,15 +2,26 @@ from settings import *
 from pyray import *
 import math
 
+#Mat 4x4 math
+
+class Mat4x4:
+    def __init__ (self, data):
+        self.data = data
+
+Identity4x4:Mat4x4 = Mat4x4([1, 0, 0, 0],
+                            [0, 1, 0, 0],
+                            [0, 0, 1, 0],
+                            [0, 0, 0, 1],)
+
+
+
+
 def draw_pixel_ras(x, y, color:Color):
     """Draws a pixel to the screen with 0,0 being the center of the screen"""
     Screen_X = int((WIDTH /2) + x)
     Screen_Y = int((HEIGHT /2) - y)
 
     draw_pixel(Screen_X, Screen_Y, color)
-
-
-# TODO: Seperate the raytracer software and the objects with the scene.
 
 def viewport_to_canvas(x, y):
     return Vector2(int(x * WIDTH/VIEWPORT_WIDTH),int( y*HEIGHT/VIEWPORT_HIGHT))

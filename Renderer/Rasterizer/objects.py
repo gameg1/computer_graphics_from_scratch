@@ -122,6 +122,7 @@ class Triangle_shaded:
 
 class Cube_3d:
     # Vertices
+
     A = Vector3( 1,  1,  1)
     B = Vector3(-1,  1,  1)
     C = Vector3(-1, -1,  1)
@@ -130,9 +131,20 @@ class Cube_3d:
     F = Vector3(-1,  1, -1)
     G = Vector3(-1, -1, -1)
     H = Vector3( 1, -1, -1)
-    
+
+    verts = [
+                A,
+                B,
+                C,
+                D,
+                E,
+                F,
+                G,
+                H,
+            ]
 
     # triangles
+
     Tris = [
         [0, 1, 2, RED],
         [0, 2, 3, RED],
@@ -146,20 +158,15 @@ class Cube_3d:
         [4, 1, 0, PURPLE],
         [2, 6, 7, SKYBLUE],
         [2, 7, 3, SKYBLUE]
-        
-    ]
-
-
-    def __init__(self, pos:Vector3 = Vector3(0, 0, 0)):
-        self.pos = pos
-        self.verts = [
-                vector3_add(self.A, self.pos),
-                vector3_add(self.B, self.pos),
-                vector3_add(self.C, self.pos),
-                vector3_add(self.D, self.pos),
-                vector3_add(self.E, self.pos),
-                vector3_add(self.F, self.pos),
-                vector3_add(self.G, self.pos),
-                vector3_add(self.H, self.pos),
             ]
+
+
+    def __init__(self, pos:Vector3 = Vector3(0, 0, 0), scale:float = 1, rotation:Mat4x4 = Identity4x4): #rotation value is temp untill known
+        # Transformation
+        self.transfrom = {
+                            "scale": scale,
+                            "rotation": rotation,
+                            "position": pos,
+                         }
+        
         

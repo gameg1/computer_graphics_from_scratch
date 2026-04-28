@@ -54,11 +54,24 @@ def Render_scene(scene:list):
 def Render_instance(instance):
     projected:list[Vector2] = []
     for V in instance.verts:
-        projected.append(project_vertex(V))
+        V_new = Apply_Transform(V, instance.transfrom)
+        projected.append(project_vertex(V_new))
     
     for T in instance.Tris:
         Render_triangle(T, projected)
 
+def Apply_Transform(vertex, transform):
+    scaled = Scale(vertex, transform["scale"])
+    rotated = Rotate(scaled, transform["rotation"])
+    translated = Translate(rotated, transform["position"])
+    return translated
+
+def Scale(v, scale):
+    pass
+def Rotate(v, rotation):
+    pass
+def Translate(v, translate):
+    pass
 def Render_triangle(T:list, projected:list[Vector2]):
     #print(type(T.P0))
     #print(projected)
