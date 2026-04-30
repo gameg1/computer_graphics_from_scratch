@@ -14,10 +14,12 @@ Identity4x4:Mat4x4 = Mat4x4([[1, 0, 0, 0],
                              [0, 0, 0, 1],])
 
 def Make_OY_Rotation_matrix(degrees):
-    return Mat4x4([[math.cos(degrees), 0, -math.sin(degrees), 0],
-                   [0                , 1,                  0, 0],
-                   [math.sin(degrees), 0,  math.cos(degrees), 0],
-                   [                0, 0,                  0, 1],])
+    cos = math.cos(degrees*math.pi/180.0)
+    sin = math.sin(degrees*math.pi/180.0)
+    return Mat4x4([[cos, 0, -sin, 0],
+                   [  0, 1,    0, 0],
+                   [sin, 0,  cos, 0],
+                   [  0, 0,    0, 1],])
 
 def Make_Translation_Matrix(translation:Vector3):
     return Mat4x4([[1, 0, 0, translation.x],
@@ -42,10 +44,10 @@ def Muliply_MV(matrix:Mat4x4, V:Vector4):
     return Vector4(result[0], result[1], result[2], result[3])
 
 def Multiply_MM4(matA:Mat4x4, matB:Mat4x4):
-    result = Mat4x4([[1, 0, 0, 0],
-                     [0, 1, 0, 0],
-                     [0, 0, 1, 0],
-                     [0, 0, 0, 1],])
+    result = Mat4x4([[0, 0, 0, 0],
+                     [0, 0, 0, 0],
+                     [0, 0, 0, 0],
+                     [0, 0, 0, 0],])
     
     for i in range(4):
         for j in range(4):
