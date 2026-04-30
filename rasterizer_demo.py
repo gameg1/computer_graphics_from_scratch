@@ -15,24 +15,22 @@ import math
 init_window(WIDTH, HEIGHT, "Rasterizer Demo")
 
 # Camera Info
-Camera_pos:Vector3 = Vector3(0, 0, 0) # X, Y, Z - At origin point
-Camera_rotation = [
-    [0, 0, 0],
-    [0, 0, 0],
-    [0, 0, 0],
-]
+Camera_pos:Vector3 = Vector3(-3, 1, 2) # X, Y, Z - At origin point
+Camera_rotation = Make_OY_Rotation_matrix(-30)
 Camera_vector:Vector3 = Vector3(0, 0, 1) # Unit vector pointing towards Z+
 
 
 
-scene = [Cube_3d(Vector3(-1.5, 0, 7)),
-         Cube_3d(Vector3(1.25, 2, 7.5)),
+scene = [Cube_3d(Vector3(-1.5, 0, 7), 0.75, Identity4x4),
+         Cube_3d(Vector3(1.25, 2.5, 7.5),  1, Make_OY_Rotation_matrix(195)),
          ]
 
 
 
 def main():
 
+    for object in scene:
+        print(object.transform)
     # Runs per frame
     while not window_should_close():
         begin_drawing()
@@ -47,31 +45,23 @@ def main():
     close_window()
 
 def Render_scene(scene:list):
-    for i in scene:
-        Render_instance(i)
+    Camera_Matrix = Multiply_MM4(transposed(Camera_rotation), Make_Translation_Matrix(vector3_invert(Camera_pos)))
+    for object in scene:
+        transform = Multiply_MM4(Camera_Matrix, object.transform)
+        Render_instance(object, transform)
 
 
-def Render_instance(instance):
+def Render_instance(instance, transform):
     projected:list[Vector2] = []
     for V in instance.verts:
-        V_new = Apply_Transform(V, instance.transfrom)
-        projected.append(project_vertex(V_new))
+        VertexH = Vector4(V.x, V.y, V.z, 1)
+
+        projected.append(project_vertex(Muliply_MV(transform, VertexH)))
     
     for T in instance.Tris:
         Render_triangle(T, projected)
 
-def Apply_Transform(vertex, transform):
-    scaled = Scale(vertex, transform["scale"])
-    rotated = Rotate(scaled, transform["rotation"])
-    translated = Translate(rotated, transform["position"])
-    return translated
 
-def Scale(v, scale):
-    pass
-def Rotate(v, rotation):
-    pass
-def Translate(v, translate):
-    pass
 def Render_triangle(T:list, projected:list[Vector2]):
     #print(type(T.P0))
     #print(projected)

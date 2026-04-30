@@ -2,21 +2,73 @@ from settings import *
 from pyray import *
 import math
 
-#Mat 4x4 math
+#=== Mat 4x4 math ===
 
 class Mat4x4:
     def __init__ (self, data):
         self.data = data
 
-Identity4x4:Mat4x4 = Mat4x4([1, 0, 0, 0],
-                            [0, 1, 0, 0],
-                            [0, 0, 1, 0],
-                            [0, 0, 0, 1],)
+Identity4x4:Mat4x4 = Mat4x4([[1, 0, 0, 0],
+                             [0, 1, 0, 0],
+                             [0, 0, 1, 0],
+                             [0, 0, 0, 1],])
 
+def Make_OY_Rotation_matrix(degrees):
+    return Mat4x4([[math.cos(degrees), 0, -math.sin(degrees), 0],
+                   [0                , 1,                  0, 0],
+                   [math.sin(degrees), 0,  math.cos(degrees), 0],
+                   [                0, 0,                  0, 1],])
 
+def Make_Translation_Matrix(translation:Vector3):
+    return Mat4x4([[1, 0, 0, translation.x],
+                   [0, 1, 0, translation.y],
+                   [0, 0, 1, translation.z],
+                   [0, 0, 0,             1],])
 
+def Make_Scaling_Matrix(scale:float):
+    return Mat4x4([[scale,      0,     0, 0],
+                   [     0, scale,     0, 0],
+                   [     0,     0, scale, 0],
+                   [     0,     0,     0, 1],])
 
-def draw_pixel_ras(x, y, color:Color):
+def Muliply_MV(matrix:Mat4x4, V:Vector4):
+    result =[0, 0, 0, 0]
+    vec = [V.x, V.y, V.z, V.w]
+
+    for i in range(4):
+        for j in range(4):
+            result[i] += matrix.data[i][j]*vec[j]
+    
+    return Vector4(result[0], result[1], result[2], result[3])
+
+def Multiply_MM4(matA:Mat4x4, matB:Mat4x4):
+    result = Mat4x4([[1, 0, 0, 0],
+                     [0, 1, 0, 0],
+                     [0, 0, 1, 0],
+                     [0, 0, 0, 1],])
+    
+    for i in range(4):
+        for j in range(4):
+            for k in range(4):
+                result.data[i][j] += matA.data[i][k] * matB.data[k][j]
+    
+    return result
+
+def transposed(mat:Mat4x4):
+    result = Mat4x4([[1, 0, 0, 0],
+                     [0, 1, 0, 0],
+                     [0, 0, 1, 0],
+                     [0, 0, 0, 1],])
+    
+    for i in range(4):
+        for j in range(4):
+            result.data[i][j] = mat.data[j][i]
+
+    return result
+
+#=== End of Mat 4x4 math ===
+
+def draw_pixel_ras(x:int, y:int, color:Color):
     """Draws a pixel to the screen with 0,0 being the center of the screen"""
     Screen_X = int((WIDTH /2) + x)
     Screen_Y = int((HEIGHT /2) - y)

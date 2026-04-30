@@ -161,12 +161,10 @@ class Cube_3d:
             ]
 
 
-    def __init__(self, pos:Vector3 = Vector3(0, 0, 0), scale:float = 1, rotation:Mat4x4 = Identity4x4): #rotation value is temp untill known
-        # Transformation
-        self.transfrom = {
-                            "scale": scale,
-                            "rotation": rotation,
-                            "position": pos,
-                         }
+    def __init__(self, pos:Vector3 = Vector3(0, 0, 0), scale:float = 1, rotation:Mat4x4 = Identity4x4): 
+        self.pos = pos
+        self.rotation = rotation
+        self.scale = scale
+        self.transform:Mat4x4 = Multiply_MM4(Make_Translation_Matrix(self.pos), Multiply_MM4(self.rotation, Make_Scaling_Matrix(self.scale)))
         
         
