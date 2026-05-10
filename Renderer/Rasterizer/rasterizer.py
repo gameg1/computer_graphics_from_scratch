@@ -2,6 +2,11 @@ from settings import *
 from pyray import *
 import math
 
+class Plane:
+    def __init__(self, normal:Vector3, distance:float):
+        self.normal = normal
+        self.distance = distance
+
 #=== Mat 4x4 math ===
 
 class Mat4x4:

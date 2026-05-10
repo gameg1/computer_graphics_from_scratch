@@ -119,52 +119,46 @@ class Triangle_shaded:
                 #print(shaded_r, shaded_g, shaded_b)
                 shaded_color = Color(shaded_r, shaded_g, shaded_b, 255)
                 draw_pixel_ras(x, y, shaded_color)
-
-class Cube_3d:
-    # Vertices
-
-    A = Vector3( 1,  1,  1)
-    B = Vector3(-1,  1,  1)
-    C = Vector3(-1, -1,  1)
-    D = Vector3( 1, -1,  1)
-    E = Vector3( 1,  1, -1)
-    F = Vector3(-1,  1, -1)
-    G = Vector3(-1, -1, -1)
-    H = Vector3( 1, -1, -1)
-
-    verts = [
-                A,
-                B,
-                C,
-                D,
-                E,
-                F,
-                G,
-                H,
-            ]
-
-    # triangles
-
-    Tris = [
-        [0, 1, 2, RED],
-        [0, 2, 3, RED],
-        [4, 0, 3, GREEN],
-        [4, 3, 7, GREEN],
-        [5, 4, 7, BLUE],
-        [5, 7, 6, BLUE],
-        [1, 5, 6, YELLOW],
-        [1, 6, 2, YELLOW],
-        [4, 5, 1, PURPLE],
-        [4, 1, 0, PURPLE],
-        [2, 6, 7, SKYBLUE],
-        [2, 7, 3, SKYBLUE]
-            ]
+        
+        
+class Object:
+    def __init__(self, vertices:list[Vector3], tris:list[list], bound_center, bound_radius):
+        self.vertices = vertices
+        self.tris = tris
+        self.bound_center = bound_center
+        self.bound_radius = bound_radius
 
 
-    def __init__(self, pos:Vector3 = Vector3(0, 0, 0), scale:float = 1, rotation:Mat4x4 = Identity4x4): 
-        self.pos = pos
+class Instance:
+    def __init__(self, object:Object, position, rotation:Mat4x4 = Identity4x4, scale:float = 1.0):
+        self.object = object
+        self.position = position
         self.rotation = rotation
         self.scale = scale
-        self.transform:Mat4x4 = Multiply_MM4(Make_Translation_Matrix(self.pos), Multiply_MM4(self.rotation, Make_Scaling_Matrix(self.scale)))
-        
-        
+        self.transform:Mat4x4 = Multiply_MM4(Make_Translation_Matrix(self.position), Multiply_MM4(self.rotation, Make_Scaling_Matrix(self.scale)))
+
+Cube_verts = [
+            Vector3( 1,  1,  1),
+            Vector3(-1,  1,  1),
+            Vector3(-1, -1,  1),
+            Vector3( 1, -1,  1),
+            Vector3( 1,  1, -1),
+            Vector3(-1,  1, -1),
+            Vector3(-1, -1, -1),
+            Vector3( 1, -1, -1),
+            ]
+Cube_tris = [
+            [0, 1, 2, RED],
+            [0, 2, 3, RED],
+            [4, 0, 3, GREEN],
+            [4, 3, 7, GREEN],
+            [5, 4, 7, BLUE],
+            [5, 7, 6, BLUE],
+            [1, 5, 6, YELLOW],
+            [1, 6, 2, YELLOW],
+            [4, 5, 1, PURPLE],
+            [4, 1, 0, PURPLE],
+            [2, 6, 7, SKYBLUE],
+            [2, 7, 3, SKYBLUE],
+            ]
+Cube = Object(Cube_verts, Cube_tris, Vector3(0, 0, 0), math.sqrt(3))
