@@ -194,11 +194,7 @@ def Render_model(object:Object):
         Render_triangle(T, projected)
 
 def Render_triangle(T, projected:list[Vector2]):
-    #print(type(T))
-    #print(T)
-    #print(T[0])
-    #print(projected)
-    tri = Triangle(
+    tri = Triangle_filled(
         projected[T[0]],#P0
         projected[T[1]],#P1
         projected[T[2]],#P2

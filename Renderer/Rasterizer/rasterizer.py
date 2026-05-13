@@ -79,7 +79,8 @@ def draw_pixel_ras(x:int, y:int, color:Color):
     """Draws a pixel to the screen with 0,0 being the center of the screen"""
     Screen_X = int((WIDTH /2) + x)
     Screen_Y = int((HEIGHT /2) - y)
-
+    #print(color)
+    #print(type(color))
     draw_pixel(Screen_X, Screen_Y, color)
 
 def viewport_to_canvas(x, y):

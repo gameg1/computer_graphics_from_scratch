@@ -1,5 +1,6 @@
-from Renderer.Rasterizer.rasterizer import *
+import Renderer.Rasterizer.rasterizer as ras
 from pyray import *
+import math
 
 
 class Triangle:
@@ -10,16 +11,16 @@ class Triangle:
         self.color = color
     
     def draw(self):
-        draw_line_ras(self.P0, self.P1, self.color)
-        draw_line_ras(self.P1, self.P2, self.color)
-        draw_line_ras(self.P2, self.P0, self.color)
+        ras.draw_line_ras(self.P0, self.P1, self.color)
+        ras.draw_line_ras(self.P1, self.P2, self.color)
+        ras.draw_line_ras(self.P2, self.P0, self.color)
 
 class Triangle_filled:
     def __init__(self, P0:Vector2, P1:Vector2, P2:Vector2, color:Color):
         self.P0 = P0
         self.P1 = P1
         self.P2 = P2
-        self.color = Color
+        self.color = color
     
     def draw(self):
         """
@@ -33,9 +34,9 @@ class Triangle_filled:
         if self.P2.y < self.P1.y: self.P2, self.P1 = self.P1, self.P2
 
         # Compute the x coordinates of the tiangle edges
-        x01:list = interpolate(self.P0.y, self.P0.x, self.P1.y, self.P1.x)
-        x12:list = interpolate(self.P1.y, self.P1.x, self.P2.y, self.P2.x)
-        x02:list = interpolate(self.P0.y, self.P0.x, self.P2.y, self.P2.x)
+        x01:list = ras.interpolate(self.P0.y, self.P0.x, self.P1.y, self.P1.x)
+        x12:list = ras.interpolate(self.P1.y, self.P1.x, self.P2.y, self.P2.x)
+        x02:list = ras.interpolate(self.P0.y, self.P0.x, self.P2.y, self.P2.x)
 
         # Concatenate the short sides
 
@@ -53,11 +54,10 @@ class Triangle_filled:
         
         # Draw the horizontal segments
         
-        for y in range(self.P0.y, self.P2.y):
+        for y in range(int(self.P0.y), int(self.P2.y)-1):
             #print(f"y:{y}, P0.y:{P0.y}, dif:{y - P0.y}, x_right_lenth:{len(x_right)}")
-
-            for x in range(int(x_left[y - self.P0.y]), int(x_right[y - self.P0.y])):
-                draw_pixel_ras(x, y, self.color)
+            for x in range(int(x_left[int(y - self.P0.y)]), int(x_right[int(y - self.P0.y)])):
+                ras.draw_pixel_ras(x, y, self.color)
 
 class Triangle_shaded:
     def __init__(self, P0:Vector3, P1:Vector3, P2:Vector3, color:Color):
@@ -75,14 +75,14 @@ class Triangle_shaded:
         if self.P2.y < self.P1.y: self.P2, self.P1 = self.P1, self.P2
 
         # Compute the x coordinates and h values of the triangle edges
-        x01 = interpolate(self.P0.y, self.P0.x, self.P1.y, self.P1.x)
-        h01 = interpolate(self.P0.y, self.P0.z, self.P1.y, self.P1.z)
+        x01 = ras.interpolate(self.P0.y, self.P0.x, self.P1.y, self.P1.x)
+        h01 = ras.interpolate(self.P0.y, self.P0.z, self.P1.y, self.P1.z)
 
-        x12 = interpolate(self.P1.y, self.P1.x, self.P2.y, self.P2.x)
-        h12 = interpolate(self.P1.y, self.P1.z, self.P2.y, self.P2.z)
+        x12 = ras.interpolate(self.P1.y, self.P1.x, self.P2.y, self.P2.x)
+        h12 = ras.interpolate(self.P1.y, self.P1.z, self.P2.y, self.P2.z)
 
-        x02 = interpolate(self.P0.y, self.P0.x, self.P2.y, self.P2.x)
-        h02 = interpolate(self.P0.y, self.P0.z, self.P2.y, self.P2.z)
+        x02 = ras.interpolate(self.P0.y, self.P0.x, self.P2.y, self.P2.x)
+        h02 = ras.interpolate(self.P0.y, self.P0.z, self.P2.y, self.P2.z)
 
         # Concatenate the short sides
         x01.pop()
@@ -110,7 +110,7 @@ class Triangle_shaded:
         for y in range(self.P0.y, self.P2.y -1):
             x_l = int(x_left[y - self.P0.y])
             x_r = int(x_right[y - self.P0.y])
-            h_segment = interpolate(x_l, h_left[y - self.P0.y], x_r, h_right[y - self.P0.y])
+            h_segment = ras.interpolate(x_l, h_left[y - self.P0.y], x_r, h_right[y - self.P0.y])
             for x in range(x_l, x_r):
                 r,g,b = self.color
                 shaded_r = int(r * h_segment[x - x_l])
@@ -118,7 +118,7 @@ class Triangle_shaded:
                 shaded_b = int(b * h_segment[x - x_l])
                 #print(shaded_r, shaded_g, shaded_b)
                 shaded_color = Color(shaded_r, shaded_g, shaded_b, 255)
-                draw_pixel_ras(x, y, shaded_color)
+                ras.draw_pixel_ras(x, y, shaded_color)
         
         
 class Object:
@@ -130,12 +130,12 @@ class Object:
 
 
 class Instance:
-    def __init__(self, object:Object, position, rotation:Mat4x4 = Identity4x4, scale:float = 1.0):
+    def __init__(self, object:Object, position, rotation:ras.Mat4x4 = ras.Identity4x4, scale:float = 1.0):
         self.object = object
         self.position = position
         self.rotation = rotation
         self.scale = scale
-        self.transform:Mat4x4 = Multiply_MM4(Make_Translation_Matrix(self.position), Multiply_MM4(self.rotation, Make_Scaling_Matrix(self.scale)))
+        self.transform:ras.Mat4x4 = ras.Multiply_MM4(ras.Make_Translation_Matrix(self.position), ras.Multiply_MM4(self.rotation, ras.Make_Scaling_Matrix(self.scale)))
 
 Cube_verts = [
             Vector3( 1,  1,  1),
