@@ -3,139 +3,10 @@ from pyray import *
 import math
 
 
-class Triangle:
-    def __init__(self, P0:Vector2, P1:Vector2, P2:Vector2, color:Color):
-        self.P0 = P0
-        self.P1 = P1
-        self.P2 = P2
-        self.color = color
-    
-    def draw(self):
-        ras.draw_line_ras(self.P0, self.P1, self.color)
-        ras.draw_line_ras(self.P1, self.P2, self.color)
-        ras.draw_line_ras(self.P2, self.P0, self.color)
 
-class Triangle_filled:
-    def __init__(self, P0:Vector2, P1:Vector2, P2:Vector2, color:Color):
-        self.P0 = P0
-        self.P1 = P1
-        self.P2 = P2
-        self.color = color
-    
-    def draw(self):
-        """
-        for each norizontal line y between the triangle's top and bottom:
-            compute x_left and x_right for this y
-            draw_line(x_left, y, x_right, y, color)
-        """
-        # Sort triangle point's by hight (y)
-        if self.P1.y < self.P0.y: self.P1, self.P0 = self.P0, self.P1
-        if self.P2.y < self.P0.y: self.P2, self.P0 = self.P0, self.P2
-        if self.P2.y < self.P1.y: self.P2, self.P1 = self.P1, self.P2
-
-        # Compute the x coordinates of the tiangle edges
-        x01:list = ras.interpolate(self.P0.y, self.P0.x, self.P1.y, self.P1.x)
-        x12:list = ras.interpolate(self.P1.y, self.P1.x, self.P2.y, self.P2.x)
-        x02:list = ras.interpolate(self.P0.y, self.P0.x, self.P2.y, self.P2.x)
-
-        # Concatenate the short sides
-
-        x01.pop()
-        x012 = x01 + x12
-
-        # Determine which is left and which is right
-        middle = math.floor(len(x02) / 2)
-        if x02[middle] < x012[middle]:
-            x_left = x02
-            x_right = x012
-        else:
-            x_left = x012
-            x_right = x02
-        
-        # Draw the horizontal segments
-        
-        for y in range(int(self.P0.y), int(self.P2.y)-1):
-            #print(f"y:{y}, P0.y:{P0.y}, dif:{y - P0.y}, x_right_lenth:{len(x_right)}")
-            for x in range(int(x_left[int(y - self.P0.y)]), int(x_right[int(y - self.P0.y)])):
-                ras.draw_pixel_ras(x, y, self.color)
-
-class Triangle_shaded:
-    def __init__(self, P0:Vector3, P1:Vector3, P2:Vector3, color:Color):
-        self.P0 = P0
-        self.P1 = P1
-        self.P2 = P2
-        self.color = color
-
-    def draw(self):
-        # Simular to draw_filled_triangle but uses vec3's to store a value H in the Z direction, ranging from 0 to 1.
-        
-        # Sort the points so that P0.y <= P1.y <= P2.y
-        if self.P1.y < self.P0.y: self.P1, self.P0 = self.P0, self.P1
-        if self.P2.y < self.P0.y: self.P2, self.P0 = self.P0, self.P1
-        if self.P2.y < self.P1.y: self.P2, self.P1 = self.P1, self.P2
-
-        # Compute the x coordinates and h values of the triangle edges
-        x01 = ras.interpolate(self.P0.y, self.P0.x, self.P1.y, self.P1.x)
-        h01 = ras.interpolate(self.P0.y, self.P0.z, self.P1.y, self.P1.z)
-
-        x12 = ras.interpolate(self.P1.y, self.P1.x, self.P2.y, self.P2.x)
-        h12 = ras.interpolate(self.P1.y, self.P1.z, self.P2.y, self.P2.z)
-
-        x02 = ras.interpolate(self.P0.y, self.P0.x, self.P2.y, self.P2.x)
-        h02 = ras.interpolate(self.P0.y, self.P0.z, self.P2.y, self.P2.z)
-
-        # Concatenate the short sides
-        x01.pop()
-        x012 = x01 + x12
-
-        h01.pop()
-        h012 = h01 + h12
-
-        # Determine which is left and which is right
-        m = math.floor(len(x012)/2)
-        if x02[m] < x012[m]:
-            x_left = x02
-            h_left = h02
-
-            x_right = x012
-            h_right = h012
-        else:
-            x_left = x012
-            h_left = h012
-
-            x_right = x02
-            h_right = h02
-
-        # Draw the horizontal segments
-        for y in range(self.P0.y, self.P2.y -1):
-            x_l = int(x_left[y - self.P0.y])
-            x_r = int(x_right[y - self.P0.y])
-            h_segment = ras.interpolate(x_l, h_left[y - self.P0.y], x_r, h_right[y - self.P0.y])
-            for x in range(x_l, x_r):
-                r,g,b = self.color
-                shaded_r = int(r * h_segment[x - x_l])
-                shaded_g = int(g * h_segment[x - x_l])
-                shaded_b = int(b * h_segment[x - x_l])
-                #print(shaded_r, shaded_g, shaded_b)
-                shaded_color = Color(shaded_r, shaded_g, shaded_b, 255)
-                ras.draw_pixel_ras(x, y, shaded_color)
         
         
-class Object:
-    def __init__(self, vertices:list[Vector3], tris:list[list], bound_center, bound_radius):
-        self.vertices = vertices
-        self.tris = tris
-        self.bound_center = bound_center
-        self.bound_radius = bound_radius
 
-
-class Instance:
-    def __init__(self, object:Object, position, rotation:ras.Mat4x4 = ras.Identity4x4, scale:float = 1.0):
-        self.object = object
-        self.position = position
-        self.rotation = rotation
-        self.scale = scale
-        self.transform:ras.Mat4x4 = ras.Multiply_MM4(ras.Make_Translation_Matrix(self.position), ras.Multiply_MM4(self.rotation, ras.Make_Scaling_Matrix(self.scale)))
 
 Cube_verts = [
             Vector3( 1,  1,  1),
@@ -161,4 +32,4 @@ Cube_tris = [
             [2, 6, 7, SKYBLUE],
             [2, 7, 3, SKYBLUE],
             ]
-Cube = Object(Cube_verts, Cube_tris, Vector3(0, 0, 0), math.sqrt(3))
+Cube = ras.Object(Cube_verts, Cube_tris, Vector3(0, 0, 0), math.sqrt(3))
